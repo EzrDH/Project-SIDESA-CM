@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const cryptoSrc = fileURLToPath(new URL('../crypto/src/index.ts', import.meta.url));
 
 export default defineConfig({
-  test: { include: ['test/**/*.test.ts'], globals: true, root: './' },
+  test: { include: ['test/**/*.test.ts'], globals: true, root: './', setupFiles: ['./vitest.setup.ts'] },
   plugins: [swc.vite()],
   resolve: { alias: { '@sidesa/crypto': cryptoSrc } },
 });
