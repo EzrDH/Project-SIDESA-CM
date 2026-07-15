@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
+import 'screens/login_screen.dart';
 
 void main() => runApp(const SidesaApp());
 
@@ -11,10 +12,8 @@ class SidesaApp extends StatelessWidget {
       title: 'SIDESA-CM',
       debugShowCheckedModeBanner: false,
       theme: sidesaTheme(),
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Desa Cibeteung Muara')),
-        body: const Center(child: Text('SIDESA-CM')),
-      ),
+      // Navigation between screens is wired in a later UI plan.
+      home: LoginScreen(onLogin: () {}),
     );
   }
 }
