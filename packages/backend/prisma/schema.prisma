@@ -83,6 +83,24 @@ model Letter {
   signedAt         DateTime      @default(now())
 }
 
+enum BookingStatus {
+  REQUESTED
+  CONFIRMED
+  CANCELLED
+  CHECKED_IN
+}
+
+model Booking {
+  id             String        @id @default(uuid())
+  wargaAccountId String
+  purpose        String
+  requestedSlot  DateTime
+  confirmedSlot  DateTime?
+  status         BookingStatus @default(REQUESTED)
+  checkinToken   String        @unique
+  createdAt      DateTime      @default(now())
+}
+
 model AuthChallenge {
   id        String   @id @default(uuid())
   accountId String
