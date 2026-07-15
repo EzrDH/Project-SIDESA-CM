@@ -43,6 +43,45 @@ model RegistryVersion {
   createdAt DateTime @default(now())
 }
 
+enum LetterType {
+  SURAT_PENGANTAR
+  SKTM
+  DOMISILI
+}
+
+enum LetterStatus {
+  SUBMITTED
+  DRAFTED
+  SIGNED
+  REJECTED
+}
+
+model LetterRequest {
+  id             String       @id @default(uuid())
+  wargaAccountId String
+  type           LetterType
+  formData       String
+  status         LetterStatus @default(SUBMITTED)
+  draftContent   String?
+  draftNumber    String?
+  createdAt      DateTime     @default(now())
+  letter         Letter?
+}
+
+model Letter {
+  id               String        @id @default(uuid())
+  requestId        String        @unique
+  request          LetterRequest @relation(fields: [requestId], references: [id])
+  letterNumber     String        @unique
+  canonicalContent String
+  documentHash     String
+  signature        String
+  kadesAccountId   String
+  kadesPublicKey   String
+  qrToken          String        @unique
+  signedAt         DateTime      @default(now())
+}
+
 model AuthChallenge {
   id        String   @id @default(uuid())
   accountId String
