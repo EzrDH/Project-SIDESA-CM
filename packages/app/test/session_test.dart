@@ -36,4 +36,37 @@ void main() {
     expect(session.token, 'jwt-1');
     expect(session.accountId, 'acc-1');
   });
+
+  test('authenticated calls attach the Bearer token', () async {
+    final kp = generateKeyPair();
+    final ks = InMemoryKeyStore(kp.privateKey);
+    String? seenAuth;
+
+    final mock = MockClient((req) async {
+      if (req.url.path.endsWith('/auth/challenge')) {
+        return http.Response(jsonEncode({'nonce': 'n'}), 200);
+      }
+      if (req.url.path.endsWith('/auth/verify')) {
+        return http.Response(jsonEncode({'token': 'jwt-2', 'role': 'WARGA'}), 201);
+      }
+      seenAuth = req.headers['authorization'];
+      if (req.url.path.endsWith('/letters/request')) {
+        return http.Response(jsonEncode({'id': 'req-1'}), 201);
+      }
+      if (req.url.path.endsWith('/letters/mine')) {
+        return http.Response(jsonEncode([{'id': 'req-1', 'type': 'DOMISILI', 'status': 'SUBMITTED'}]), 200);
+      }
+      return http.Response('not found', 404);
+    });
+
+    final session = Session(api: ApiClient('http://test', client: mock), keyStore: ks);
+    await session.login('acc-9');
+
+    final id = await session.ajukanSurat('DOMISILI', {'nama': 'Budi'});
+    expect(id, 'req-1');
+    expect(seenAuth, 'Bearer jwt-2');
+
+    final list = await session.suratSaya();
+    expect(list, hasLength(1));
+  });
 }
