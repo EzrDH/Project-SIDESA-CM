@@ -27,8 +27,20 @@ model Account {
   publicKey     String          @unique
   displayName   String
   nikCommitment String?
+  attributes    String?
+  leafIndex     Int?            @unique
   createdAt     DateTime        @default(now())
   challenges    AuthChallenge[]
+}
+
+model RegistryVersion {
+  id        String   @id @default(uuid())
+  version   Int      @unique @default(autoincrement())
+  root      String
+  signature String?
+  signedBy  String?
+  active    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model AuthChallenge {
