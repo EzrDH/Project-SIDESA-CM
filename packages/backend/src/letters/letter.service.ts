@@ -41,8 +41,8 @@ export class LetterService {
     if (!req) throw new NotFoundException('Permohonan tidak ditemukan.');
     if (req.status !== 'SUBMITTED') throw new BadRequestException('Permohonan sudah diproses.');
     const type = req.type as LetterType;
-    const seq = (await this.prisma.letterRequest.count({ where: { type: req.type, draftNumber: { not: null } } })) + 1;
-    const letterNumber = `${seq}/${CODE[type]}/${new Date().getFullYear()}`;
+    // req.number is an atomic autoincrement assigned at request creation -> no race.
+    const letterNumber = `${req.number}/${CODE[type]}/${new Date().getFullYear()}`;
     const canonicalContent = renderCanonicalLetter(type, JSON.parse(req.formData), letterNumber);
     await this.prisma.letterRequest.update({
       where: { id: requestId },

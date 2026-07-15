@@ -58,6 +58,7 @@ enum LetterStatus {
 
 model LetterRequest {
   id             String       @id @default(uuid())
+  number         Int          @unique @default(autoincrement())
   wargaAccountId String
   type           LetterType
   formData       String
