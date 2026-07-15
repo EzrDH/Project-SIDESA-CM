@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Status Surat - Desa Cibeteung Muara</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&amp;family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#eceeef",
+                        "primary": "#00434f",
+                        "surface": "#f8fafa",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#90d0e2",
+                        "on-background": "#191c1d",
+                        "tertiary-fixed": "#ffdcc4",
+                        "surface-bright": "#f8fafa",
+                        "on-secondary-fixed-variant": "#285015",
+                        "surface-container-high": "#e6e8e9",
+                        "primary-fixed": "#acedfe",
+                        "error": "#ba1a1a",
+                        "tertiary": "#5d3209",
+                        "primary-fixed-dim": "#90d0e2",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2e3132",
+                        "on-primary": "#ffffff",
+                        "background-cool": "#F4F6F7",
+                        "tertiary-ochre": "#B7791F",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#062100",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "surface-dim": "#d8dadb",
+                        "background": "#f8fafa",
+                        "outline-variant": "#bfc8cb",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#b9eb9e",
+                        "surface-container-low": "#f2f4f5",
+                        "paper-preview": "#FBF8F1",
+                        "error-red": "#BA1A1A",
+                        "tertiary-fixed-dim": "#fcb885",
+                        "outline": "#70797b",
+                        "on-surface": "#191c1d",
+                        "secondary-fixed": "#bff0a3",
+                        "secondary": "#3f692b",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#79481f",
+                        "on-primary-fixed": "#001f26",
+                        "surface-variant": "#e1e3e4",
+                        "surface-clean": "#F8FAFB",
+                        "on-primary-container": "#92d2e4",
+                        "inverse-on-surface": "#eff1f2",
+                        "on-surface-variant": "#3f484b",
+                        "on-error": "#ffffff",
+                        "primary-container": "#0f5c6b",
+                        "surface-tint": "#206776",
+                        "secondary-fixed-dim": "#a4d489",
+                        "on-tertiary-container": "#feba87",
+                        "on-tertiary-fixed": "#2f1400",
+                        "on-tertiary-fixed-variant": "#693b13",
+                        "surface-container-highest": "#e1e3e4",
+                        "success-sah": "#2E7D32",
+                        "on-secondary-container": "#416b2d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "page-margin": "20px",
+                        "card-padding": "16px",
+                        "gap-xs": "8px",
+                        "gap-sm": "12px",
+                        "gap-lg": "24px",
+                        "gap-md": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "code-mono": ["jetbrainsMono"],
+                        "caption-sm": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-serif": ["merriweather"],
+                        "title-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["30px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "code-mono": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "caption-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-serif": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .cap-digital {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid theme('colors.tertiary-ochre');
+            color: theme('colors.tertiary-ochre');
+            background-color: theme('colors.surface-container-lowest');
+            box-shadow: 0 4px 6px -1px rgba(183, 121, 31, 0.1), 0 2px 4px -1px rgba(183, 121, 31, 0.06);
+        }
+        .cap-digital::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            border-radius: 50%;
+            border: 1px dashed theme('colors.tertiary-ochre');
+            opacity: 0.5;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-cool min-h-screen text-on-background font-body-lg flex flex-col items-center">
+<!-- Content Area -->
+<main class="w-full max-w-[600px] flex-grow px-page-margin pb-32 pt-8 flex flex-col gap-gap-lg">
+<!-- Top Header for Flow (not the app bar, but context) -->
+<header class="flex items-center gap-4 mb-4">
+<button aria-label="Kembali" class="w-12 h-12 flex items-center justify-center rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<div class="flex-grow text-center pr-12">
+<h1 class="font-title-lg text-title-lg text-on-surface">Status Pengajuan</h1>
+</div>
+</header>
+<!-- Document Preview / Status Header Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-card-padding flex flex-col gap-gap-sm items-center relative overflow-hidden border border-outline-variant/30">
+<!-- Decorative accent -->
+<div class="absolute top-0 left-0 w-full h-1 bg-tertiary-ochre"></div>
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-[32px] text-tertiary-ochre" style="font-variation-settings: 'FILL' 1;">description</span>
+</div>
+<h2 class="font-title-lg text-title-lg text-center">Surat Keterangan Tidak Mampu (SKTM)</h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider">No. Ref:</span>
+<span class="font-code-mono text-code-mono bg-surface-container-low px-2 py-1 rounded text-primary">2024/SKTM/001</span>
+</div>
+<!-- Current Status Cap -->
+<div class="mt-6 mb-4">
+<div class="cap-digital flex flex-col">
+<span class="material-symbols-outlined text-[32px] mb-1" style="font-variation-settings: 'FILL' 1;">pending</span>
+</div>
+</div>
+<p class="font-label-md text-label-md text-tertiary-ochre bg-tertiary-ochre/10 px-4 py-2 rounded-full font-bold">Menunggu Verifikasi Operator</p>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant text-center max-w-[80%] mt-2">
+                Pengajuan Anda sedang diperiksa oleh operator desa. Proses ini biasanya memakan waktu 1-2 hari kerja.
+            </p>
+</div>
+<!-- Timeline Stepper -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-card-padding py-6">
+<h3 class="font-title-lg text-title-lg mb-6 border-b border-surface-variant pb-2">Riwayat Proses</h3>
+<div class="relative pl-6">
+<!-- Vertical Line -->
+<div class="absolute left-[11px] top-2 bottom-6 w-0.5 bg-surface-variant"></div>
+<!-- Step 1: Diajukan (Completed) -->
+<div class="relative flex gap-gap-md mb-8">
+<div class="absolute -left-6 w-6 h-6 rounded-full bg-success-sah flex items-center justify-center z-10 border-4 border-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-on-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div class="flex-grow pt-0.5">
+<h4 class="font-label-md text-label-md text-on-surface">Diajukan</h4>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant mt-1">24 Okt 2024, 09:00 WIB</p>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant mt-1">Formulir pengajuan SKTM berhasil dikirim.</p>
+</div>
+</div>
+<!-- Step 2: Diverifikasi operator (Current) -->
+<div class="relative flex gap-gap-md mb-8">
+<div class="absolute -left-6 w-6 h-6 rounded-full bg-tertiary-ochre flex items-center justify-center z-10 border-4 border-surface-container-lowest">
+<span class="material-symbols-outlined text-[14px] text-surface-container-lowest" style="font-variation-settings: 'FILL' 1;">sync</span>
+</div>
+<div class="flex-grow pt-0.5">
+<h4 class="font-label-md text-label-md text-tertiary-ochre font-bold">Diverifikasi operator</h4>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant mt-1">24 Okt 2024, 09:15 WIB</p>
+<div class="bg-tertiary-ochre/5 border border-tertiary-ochre/20 rounded p-3 mt-2">
+<p class="font-caption-sm text-caption-sm text-on-surface-variant">Operator sedang memeriksa kelengkapan dokumen pengantar RT/RW.</p>
+</div>
+</div>
+</div>
+<!-- Step 3: Ditandatangani Kepala Desa (Pending) -->
+<div class="relative flex gap-gap-md mb-8 opacity-50">
+<div class="absolute -left-6 w-6 h-6 rounded-full bg-surface-variant flex items-center justify-center z-10 border-4 border-surface-container-lowest">
+<!-- Empty circle for pending -->
+</div>
+<div class="flex-grow pt-0.5">
+<h4 class="font-label-md text-label-md text-on-surface-variant">Ditandatangani Kepala Desa</h4>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant mt-1">Menunggu</p>
+</div>
+</div>
+<!-- Step 4: Selesai (Pending) -->
+<div class="relative flex gap-gap-md opacity-50">
+<div class="absolute -left-6 w-6 h-6 rounded-full bg-surface-variant flex items-center justify-center z-10 border-4 border-surface-container-lowest">
+<!-- Empty circle for pending -->
+</div>
+<div class="flex-grow pt-0.5">
+<h4 class="font-label-md text-label-md text-on-surface-variant">Selesai</h4>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant mt-1">Surat siap diunduh</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Privacy/Info note -->
+<div class="flex items-start gap-3 bg-surface-container-low p-4 rounded-lg">
+<span class="material-symbols-outlined text-outline text-[20px] mt-0.5">info</span>
+<p class="font-caption-sm text-caption-sm text-on-surface-variant flex-grow">
+                Notifikasi akan dikirimkan ke perangkat Anda setiap kali status pengajuan berubah.
+            </p>
+</div>
+</main>
+<!-- Bottom Navigation Shell excluded due to Intent Fallback rules (Linear/Transactional/Task-focused page) -->
+</body></html>

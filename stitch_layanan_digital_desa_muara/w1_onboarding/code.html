@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Onboarding - Layanan Digital Desa</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;family=Merriweather:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#eceeef",
+                        "primary": "#00434f",
+                        "surface": "#f8fafa",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#90d0e2",
+                        "on-background": "#191c1d",
+                        "tertiary-fixed": "#ffdcc4",
+                        "surface-bright": "#f8fafa",
+                        "on-secondary-fixed-variant": "#285015",
+                        "surface-container-high": "#e6e8e9",
+                        "primary-fixed": "#acedfe",
+                        "error": "#ba1a1a",
+                        "tertiary": "#5d3209",
+                        "primary-fixed-dim": "#90d0e2",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2e3132",
+                        "on-primary": "#ffffff",
+                        "background-cool": "#F4F6F7",
+                        "tertiary-ochre": "#B7791F",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#062100",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "surface-dim": "#d8dadb",
+                        "background": "#f8fafa",
+                        "outline-variant": "#bfc8cb",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#b9eb9e",
+                        "surface-container-low": "#f2f4f5",
+                        "paper-preview": "#FBF8F1",
+                        "error-red": "#BA1A1A",
+                        "tertiary-fixed-dim": "#fcb885",
+                        "outline": "#70797b",
+                        "on-surface": "#191c1d",
+                        "secondary-fixed": "#bff0a3",
+                        "secondary": "#3f692b",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#79481f",
+                        "on-primary-fixed": "#001f26",
+                        "surface-variant": "#e1e3e4",
+                        "surface-clean": "#F8FAFB",
+                        "on-primary-container": "#92d2e4",
+                        "inverse-on-surface": "#eff1f2",
+                        "on-surface-variant": "#3f484b",
+                        "on-error": "#ffffff",
+                        "primary-container": "#0f5c6b",
+                        "surface-tint": "#206776",
+                        "secondary-fixed-dim": "#a4d489",
+                        "on-tertiary-container": "#feba87",
+                        "on-tertiary-fixed": "#2f1400",
+                        "on-tertiary-fixed-variant": "#693b13",
+                        "surface-container-highest": "#e1e3e4",
+                        "success-sah": "#2E7D32",
+                        "on-secondary-container": "#416b2d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "page-margin": "20px",
+                        "card-padding": "16px",
+                        "gap-xs": "8px",
+                        "gap-sm": "12px",
+                        "gap-lg": "24px",
+                        "gap-md": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "code-mono": ["JetBrains Mono"],
+                        "caption-sm": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-serif": ["Merriweather"],
+                        "title-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["30px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "code-mono": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "caption-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-serif": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen flex flex-col items-center justify-center bg-surface relative overflow-hidden">
+<!-- Abstract background shape -->
+<div class="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary-container rounded-full opacity-20 blur-3xl pointer-events-none"></div>
+<div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-secondary-container rounded-full opacity-30 blur-3xl pointer-events-none"></div>
+<main class="w-full max-w-md px-page-margin h-[884px] flex flex-col justify-between pt-12 pb-8 relative z-10">
+<div class="flex-1 flex flex-col items-center justify-center w-full">
+<!-- Illustration Area -->
+<div class="w-full h-72 mb-12 relative flex items-center justify-center rounded-3xl overflow-hidden bg-surface-container-lowest shadow-sm border border-surface-container">
+<img class="object-cover w-full h-full" data-alt="A clean, modern 3D illustration of a smartphone displaying an official digital document with a glowing green checkmark seal, floating slightly above a miniature stylized Indonesian village landscape. The lighting is soft and high-key, using bright whites and subtle teal (archive blue) accents to convey trust, safety, and official government digital services. The overall mood is welcoming, organized, and technologically advanced yet approachable." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBB2Zfz7boJu-aUOplNbx4JZzbs6eMs7U94O6RYRzVyYE8n4BBWIrzUahhmxfqmdY_zlPK_eVD0OInA-HqgDlLGikvQTXAVncApfdT6SwEZlVVopqCpUD5JGcUxl_U-yxhUfZPK8YEG8Lg_xfuzfVlPwwTlDwIqTiQz5iz2DW0qSnUzzrE-UF7j2JOXiNf0jVA4FnglO-cdB_0gNadfLtNkHQkTpbZ7aqQsB2zB8e7wNJblygN6T4Wieu54015vZ6J-Yvrr1E8alcM"/>
+</div>
+<!-- Content Area -->
+<div class="text-center px-4 space-y-4">
+<h1 class="font-display-lg text-display-lg text-primary">Layanan Digital Desa</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-[280px] mx-auto">
+                    Ajukan surat dan buat janji temu dengan mudah dan aman langsung dari ponsel Anda.
+                </p>
+</div>
+</div>
+<!-- Footer / Actions Area -->
+<div class="w-full space-y-8 pb-4">
+<!-- Progress Dots -->
+<div class="flex justify-center items-center space-x-2">
+<div class="w-6 h-2 rounded-full bg-primary transition-all duration-300"></div>
+<div class="w-2 h-2 rounded-full bg-surface-variant transition-all duration-300"></div>
+<div class="w-2 h-2 rounded-full bg-surface-variant transition-all duration-300"></div>
+</div>
+<!-- Primary Action -->
+<button class="w-full bg-primary hover:bg-surface-tint text-on-primary font-label-md text-label-md rounded-[14px] h-14 flex items-center justify-center shadow-sm active:scale-[0.98] transition-all duration-200">
+                Mulai
+            </button>
+</div>
+</main>
+</body></html>

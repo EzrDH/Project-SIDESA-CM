@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Konfirmasi Tanda Tangan - Desa Cibeteung Muara</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Merriweather:wght@400;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#eceeef",
+                        "primary": "#00434f",
+                        "surface": "#f8fafa",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#90d0e2",
+                        "on-background": "#191c1d",
+                        "tertiary-fixed": "#ffdcc4",
+                        "surface-bright": "#f8fafa",
+                        "on-secondary-fixed-variant": "#285015",
+                        "surface-container-high": "#e6e8e9",
+                        "primary-fixed": "#acedfe",
+                        "error": "#ba1a1a",
+                        "tertiary": "#5d3209",
+                        "primary-fixed-dim": "#90d0e2",
+                        "on-error-container": "#93000a",
+                        "inverse-surface": "#2e3132",
+                        "on-primary": "#ffffff",
+                        "background-cool": "#F4F6F7",
+                        "tertiary-ochre": "#B7791F",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#062100",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "surface-dim": "#d8dadb",
+                        "background": "#f8fafa",
+                        "outline-variant": "#bfc8cb",
+                        "on-tertiary": "#ffffff",
+                        "secondary-container": "#b9eb9e",
+                        "surface-container-low": "#f2f4f5",
+                        "paper-preview": "#FBF8F1",
+                        "error-red": "#BA1A1A",
+                        "tertiary-fixed-dim": "#fcb885",
+                        "outline": "#70797b",
+                        "on-surface": "#191c1d",
+                        "secondary-fixed": "#bff0a3",
+                        "secondary": "#3f692b",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#79481f",
+                        "on-primary-fixed": "#001f26",
+                        "surface-variant": "#e1e3e4",
+                        "surface-clean": "#F8FAFB",
+                        "on-primary-container": "#92d2e4",
+                        "inverse-on-surface": "#eff1f2",
+                        "on-surface-variant": "#3f484b",
+                        "on-error": "#ffffff",
+                        "primary-container": "#0f5c6b",
+                        "surface-tint": "#206776",
+                        "secondary-fixed-dim": "#a4d489",
+                        "on-tertiary-container": "#feba87",
+                        "on-tertiary-fixed": "#2f1400",
+                        "on-tertiary-fixed-variant": "#693b13",
+                        "surface-container-highest": "#e1e3e4",
+                        "success-sah": "#2E7D32",
+                        "on-secondary-container": "#416b2d"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "page-margin": "20px",
+                        "card-padding": "16px",
+                        "gap-xs": "8px",
+                        "gap-sm": "12px",
+                        "gap-lg": "24px",
+                        "gap-md": "16px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "code-mono": ["JetBrains Mono"],
+                        "caption-sm": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-serif": ["Merriweather"],
+                        "title-lg": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["30px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "code-mono": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "caption-sm": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-md": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-serif": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+                        "title-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill-icon {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bottom-sheet-enter {
+            transform: translateY(100%);
+            animation: slideUp 0.3s cubic-bezier(0.2, 0, 0, 1) forwards;
+        }
+        .backdrop-enter {
+            opacity: 0;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        @keyframes slideUp {
+            to { transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        .fingerprint-pulse {
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.8; }
+            100% { transform: scale(1.5); opacity: 0; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased h-screen overflow-hidden flex flex-col font-body-lg">
+<!-- Mock Background Content (to show bottom sheet context) -->
+<main class="flex-1 p-page-margin relative z-0">
+<!-- TopAppBar (Suppressed structurally per intent, just showing context behind scrim) -->
+<div class="h-full flex flex-col items-center justify-center opacity-30">
+<div class="w-full max-w-md bg-surface-container rounded-xl p-card-padding shadow-sm h-[600px]">
+<div class="h-8 bg-surface-variant rounded w-3/4 mb-4"></div>
+<div class="h-4 bg-surface-variant rounded w-full mb-2"></div>
+<div class="h-4 bg-surface-variant rounded w-5/6 mb-2"></div>
+<div class="h-4 bg-surface-variant rounded w-full mb-8"></div>
+<div class="h-32 bg-paper-preview rounded-lg border border-outline-variant mb-4"></div>
+<div class="h-12 bg-primary rounded-xl w-full"></div>
+</div>
+</div>
+</main>
+<!-- Bottom Sheet Scrim / Backdrop -->
+<div class="fixed inset-0 bg-on-background/40 backdrop-blur-sm z-40 backdrop-enter flex items-end justify-center">
+<!-- Bottom Sheet Container -->
+<div class="w-full max-w-lg bg-surface-container-lowest rounded-t-[28px] shadow-lg bottom-sheet-enter flex flex-col relative pb-safe">
+<!-- Drag Handle -->
+<div class="w-full flex justify-center pt-4 pb-2">
+<div class="w-8 h-1 bg-outline-variant rounded-full"></div>
+</div>
+<!-- Content Container -->
+<div class="px-page-margin pb-gap-lg pt-gap-sm flex flex-col items-center text-center">
+<!-- Security Header -->
+<div class="flex items-center gap-2 mb-gap-lg text-primary">
+<span class="material-symbols-outlined fill-icon text-[20px]">shield</span>
+<span class="font-label-md text-label-md uppercase tracking-wider">Otentikasi Aman</span>
+</div>
+<!-- Document Info -->
+<h2 class="font-title-lg text-title-lg text-on-surface mb-2">Surat Keterangan Usaha</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-gap-lg">Budi Santoso</p>
+<!-- Divider -->
+<div class="w-full h-px bg-surface-variant mb-gap-lg"></div>
+<!-- Action Prompt -->
+<h3 class="font-headline-md text-headline-md text-on-surface mb-gap-md max-w-[280px]">Konfirmasi tanda tangan dengan sidik jari</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-8 max-w-[300px]">Gunakan sensor sidik jari pada perangkat Anda untuk menandatangani dokumen ini secara resmi.</p>
+<!-- Fingerprint Interaction Area -->
+<div class="relative flex items-center justify-center w-32 h-32 mb-8">
+<!-- Ripple effect -->
+<div class="absolute inset-0 bg-primary/20 rounded-full fingerprint-pulse"></div>
+<div class="absolute inset-2 bg-primary/10 rounded-full fingerprint-pulse" style="animation-delay: 0.5s"></div>
+<!-- Icon Container -->
+<button class="relative z-10 w-20 h-20 bg-primary-container text-on-primary-container rounded-full flex items-center justify-center shadow-md active:scale-95 transition-transform duration-200" id="fingerprint-btn">
+<span class="material-symbols-outlined text-[48px]">fingerprint</span>
+</button>
+</div>
+<!-- Secondary Action -->
+<button class="font-label-md text-label-md text-primary px-6 py-3 rounded-full hover:bg-surface-container-low transition-colors w-full max-w-[200px]">
+                    Batal
+                </button>
+</div>
+</div>
+</div>
+<script>
+        // Simple interaction script to simulate scanning
+        document.getElementById('fingerprint-btn').addEventListener('click', function() {
+            this.classList.replace('bg-primary-container', 'bg-success-sah');
+            this.classList.replace('text-on-primary-container', 'text-on-primary');
+            this.querySelector('span').textContent = 'check_circle';
+            this.querySelector('span').classList.add('fill-icon');
+            
+            // Remove pulse animations
+            document.querySelectorAll('.fingerprint-pulse').forEach(el => el.style.display = 'none');
+            
+            // Change text
+            const title = document.querySelector('h3');
+            title.textContent = 'Berhasil diverifikasi';
+            title.classList.replace('text-on-surface', 'text-success-sah');
+            
+            setTimeout(() => {
+                // In a real app, this would submit the form or close the sheet
+                console.log('Signature confirmed');
+            }, 1000);
+        });
+    </script>
+</body></html>
