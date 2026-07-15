@@ -23,6 +23,13 @@ export class LetterController {
     return this.letters.listQueue();
   }
 
+  @Get('mine')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('WARGA')
+  mine(@Req() req: any) {
+    return this.letters.listForWarga(req.user.accountId);
+  }
+
   @Post(':id/draft')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OPERATOR')

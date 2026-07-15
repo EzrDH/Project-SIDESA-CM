@@ -36,6 +36,22 @@ export class LetterService {
     return rows.map((r) => ({ id: r.id, type: r.type, createdAt: r.createdAt }));
   }
 
+  async listForWarga(wargaAccountId: string) {
+    const rows = await this.prisma.letterRequest.findMany({
+      where: { wargaAccountId },
+      orderBy: { createdAt: 'desc' },
+      include: { letter: true },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      type: r.type,
+      status: r.status,
+      createdAt: r.createdAt,
+      letterNumber: r.letter?.letterNumber ?? null,
+      qrToken: r.letter?.qrToken ?? null,
+    }));
+  }
+
   async draft(requestId: string): Promise<{ letterNumber: string; canonicalContent: string; documentHash: string }> {
     const req = await this.prisma.letterRequest.findUnique({ where: { id: requestId } });
     if (!req) throw new NotFoundException('Permohonan tidak ditemukan.');
