@@ -11,6 +11,7 @@ Aplikasi layanan digital **Desa Cibeteung Muara** (Ciseeng, Bogor) — tanda tan
 - Biarkan **test watcher menyala** saat bekerja (`npm -w @sidesa/backend run test:watch`, atau `flutter test` berulang).
 - **JANGAN PERNAH melemahkan test soundness/negatif** agar hijau. Test merah pada kripto/keamanan = ada yang salah → investigasi (superpowers:systematic-debugging).
 - Commit kecil & sering. Vibe bebas untuk UI/glue; **ketat untuk kripto & auth**.
+- **Setiap task selesai & test hijau → `git commit` LALU `git push` ke GitHub.** User telah mengizinkan auto commit+push pada tiap perkembangan (tak perlu tanya lagi). Selalu pastikan tak ada rahasia (`.env`) ikut ter-push.
 
 ## KEPATUHAN KRIPTO (tidak bisa ditawar)
 - Sesuai **Kepka BSSN No. 443 Tahun 2025**: ECDSA **P-384**, hash **SHA-384**, **AES-256**.
