@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_shell.dart';
 
 void main() => runApp(const SidesaApp());
 
@@ -12,8 +13,13 @@ class SidesaApp extends StatelessWidget {
       title: 'SIDESA-CM',
       debugShowCheckedModeBanner: false,
       theme: sidesaTheme(),
-      // Navigation between screens is wired in a later UI plan.
-      home: LoginScreen(onLogin: () {}),
+      home: Builder(
+        builder: (context) => LoginScreen(
+          onLogin: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const MainShell()),
+          ),
+        ),
+      ),
     );
   }
 }
