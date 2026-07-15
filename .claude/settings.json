@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(docker start sidesa-pg)",
+      "Bash(docker stop sidesa-pg)"
+    ]
+  }
+}
