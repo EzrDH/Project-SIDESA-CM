@@ -8,4 +8,9 @@ class AppConfig {
   /// --dart-define=SIDESA_ACCOUNT=<uuid>
   static const String devAccountId =
       String.fromEnvironment('SIDESA_ACCOUNT', defaultValue: '');
+
+  /// Optional dev private key (hex) matching the seeded account's public key.
+  /// --dart-define=SIDESA_PRIVKEY=<hex>
+  static const String devPrivKey =
+      String.fromEnvironment('SIDESA_PRIVKEY', defaultValue: '');
 }

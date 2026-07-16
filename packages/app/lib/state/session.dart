@@ -16,7 +16,10 @@ class Session {
 
   Session({ApiClient? api, KeyStore? keyStore})
       : api = api ?? ApiClient(AppConfig.baseUrl),
-        keyStore = keyStore ?? InMemoryKeyStore(generateKeyPair().privateKey) {
+        keyStore = keyStore ??
+            InMemoryKeyStore(AppConfig.devPrivKey.isNotEmpty
+                ? hexToBytes(AppConfig.devPrivKey)
+                : generateKeyPair().privateKey) {
     _auth = AuthService(this.api, this.keyStore);
   }
 
