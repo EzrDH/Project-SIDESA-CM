@@ -54,11 +54,23 @@ class SuratSelesaiScreen extends StatelessWidget {
           const SizedBox(height: 20),
           Row(children: [
             Expanded(
-              child: FilledButton.icon(onPressed: () {}, icon: const Icon(Icons.download), label: const Text('Unduh PDF')),
+              child: FilledButton.icon(
+                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Mengunduh PDF surat…')),
+                ),
+                icon: const Icon(Icons.download),
+                label: const Text('Unduh PDF'),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.share_outlined), label: const Text('Bagikan')),
+              child: OutlinedButton.icon(
+                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Membagikan surat…')),
+                ),
+                icon: const Icon(Icons.share_outlined),
+                label: const Text('Bagikan'),
+              ),
             ),
           ]),
           const SizedBox(height: 12),

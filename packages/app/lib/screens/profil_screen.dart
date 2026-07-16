@@ -3,7 +3,11 @@ import '../theme.dart';
 import '../widgets/ui.dart';
 
 class ProfilScreen extends StatelessWidget {
-  const ProfilScreen({super.key});
+  final VoidCallback? onLogout;
+  const ProfilScreen({super.key, this.onLogout});
+
+  void _soon(BuildContext context) => ScaffoldMessenger.of(context)
+      .showSnackBar(const SnackBar(content: Text('Fitur ini segera hadir.')));
 
   @override
   Widget build(BuildContext context) {
@@ -25,16 +29,16 @@ class ProfilScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          const MenuCard(icon: Icons.badge_outlined, title: 'Data diri', onTap: _noop),
+          MenuCard(icon: Icons.badge_outlined, title: 'Data diri', onTap: () => _soon(context)),
           const SizedBox(height: 12),
-          const MenuCard(icon: Icons.lock_outline, title: 'Keamanan (PIN & sidik jari)', onTap: _noop),
+          MenuCard(icon: Icons.lock_outline, title: 'Keamanan (PIN & sidik jari)', onTap: () => _soon(context)),
           const SizedBox(height: 12),
-          const MenuCard(icon: Icons.notifications_none, title: 'Pengaturan notifikasi', onTap: _noop),
+          MenuCard(icon: Icons.notifications_none, title: 'Pengaturan notifikasi', onTap: () => _soon(context)),
           const SizedBox(height: 12),
-          const MenuCard(icon: Icons.help_outline, title: 'Pusat bantuan', onTap: _noop),
+          MenuCard(icon: Icons.help_outline, title: 'Pusat bantuan', onTap: () => _soon(context)),
           const SizedBox(height: 24),
           OutlinedButton.icon(
-            onPressed: () {},
+            onPressed: () => _confirmLogout(context),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFC0392B),
               side: const BorderSide(color: Color(0x33C0392B)),
@@ -46,6 +50,25 @@ class ProfilScreen extends StatelessWidget {
       ),
     );
   }
-}
 
-void _noop() {}
+  void _confirmLogout(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Keluar dari akun?'),
+        content: const Text('Anda perlu masuk lagi untuk menggunakan layanan.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFC0392B), minimumSize: const Size(88, 44)),
+            onPressed: () {
+              Navigator.pop(ctx);
+              onLogout?.call();
+            },
+            child: const Text('Keluar'),
+          ),
+        ],
+      ),
+    );
+  }
+}

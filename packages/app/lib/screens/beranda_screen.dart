@@ -6,7 +6,8 @@ import 'pilih_surat_screen.dart';
 import 'status_surat_screen.dart';
 
 class BerandaScreen extends StatelessWidget {
-  const BerandaScreen({super.key});
+  final void Function(int tab)? onGoToTab;
+  const BerandaScreen({super.key, this.onGoToTab});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +28,12 @@ class BerandaScreen extends StatelessWidget {
               Text('Layanan Digital', style: TextStyle(color: kTextSecondary, fontSize: 13)),
             ]),
           ),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.notifications_none)),
+          IconButton(
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Belum ada notifikasi baru.')),
+            ),
+            icon: const Icon(Icons.notifications_none),
+          ),
         ]),
         const SizedBox(height: 20),
         Text('Halo, Budi 👋', style: Theme.of(context).textTheme.headlineMedium),
@@ -41,9 +47,9 @@ class BerandaScreen extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Row(children: [
-          Expanded(child: _MiniAction(icon: Icons.event_available_outlined, label: 'Buat Janji', color: kPrimary, onTap: () {})),
+          Expanded(child: _MiniAction(icon: Icons.event_available_outlined, label: 'Buat Janji', color: kPrimary, onTap: () => onGoToTab?.call(2))),
           const SizedBox(width: 12),
-          Expanded(child: _MiniAction(icon: Icons.folder_open_outlined, label: 'Surat Saya', color: kProgress, onTap: () {})),
+          Expanded(child: _MiniAction(icon: Icons.folder_open_outlined, label: 'Surat Saya', color: kProgress, onTap: () => onGoToTab?.call(1))),
         ]),
         const SizedBox(height: 24),
         const Text('Permohonan terakhir', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16, color: kTextPrimary)),

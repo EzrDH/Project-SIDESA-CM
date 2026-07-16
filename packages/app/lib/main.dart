@@ -20,25 +20,46 @@ class SidesaApp extends StatelessWidget {
         title: 'SIDESA-CM',
         debugShowCheckedModeBanner: false,
         theme: sidesaTheme(),
-        home: Builder(
-          builder: (context) => LoginScreen(onLogin: () => _login(context)),
-        ),
+        home: const RootGate(),
       ),
     );
   }
+}
 
-  Future<void> _login(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
-    final navigator = Navigator.of(context);
-    // Real login when a dev account is configured (--dart-define=SIDESA_ACCOUNT=...).
-    // Otherwise enter in demo mode (static data) so the app is always runnable.
+/// Toggles between login and the main app; owns login/logout state.
+class RootGate extends StatefulWidget {
+  const RootGate({super.key});
+  @override
+  State<RootGate> createState() => _RootGateState();
+}
+
+class _RootGateState extends State<RootGate> {
+  bool _loggedIn = false;
+
+  Future<void> _login() async {
+    final session = SessionScope.of(context);
+    // Real login when a dev account is configured; otherwise demo mode.
     if (AppConfig.devAccountId.isNotEmpty) {
       try {
         await session.login(AppConfig.devAccountId);
-      } catch (e) {
-        messenger.showSnackBar(SnackBar(content: Text('Masuk mode demo (backend tidak tersedia).')));
+      } catch (_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Masuk mode demo (backend tidak tersedia).')),
+          );
+        }
       }
     }
-    navigator.pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
+    if (mounted) setState(() => _loggedIn = true);
+  }
+
+  void _logout() {
+    SessionScope.of(context).logout();
+    setState(() => _loggedIn = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _loggedIn ? MainShell(onLogout: _logout) : LoginScreen(onLogin: _login);
   }
 }

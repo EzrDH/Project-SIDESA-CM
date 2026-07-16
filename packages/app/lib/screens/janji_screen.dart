@@ -50,14 +50,36 @@ class JanjiScreen extends StatelessWidget {
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
             )),
             const SizedBox(height: 12),
-            const ListTile(
+            ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.calendar_today_outlined, color: kPrimary),
-              title: Text('Pilih tanggal & waktu'),
-              trailing: Icon(Icons.chevron_right),
+              leading: const Icon(Icons.calendar_today_outlined, color: kPrimary),
+              title: const Text('Pilih tanggal & waktu'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final now = DateTime.now();
+                final picked = await showDatePicker(
+                  context: context,
+                  firstDate: now,
+                  lastDate: now.add(const Duration(days: 90)),
+                  initialDate: now.add(const Duration(days: 1)),
+                );
+                if (picked != null && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Tanggal dipilih: ${picked.day}/${picked.month}/${picked.year}')),
+                  );
+                }
+              },
             ),
             const SizedBox(height: 8),
-            FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Ajukan janji')),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Janji temu diajukan. Menunggu konfirmasi.')),
+                );
+              },
+              child: const Text('Ajukan janji'),
+            ),
           ]),
         ),
       ),
