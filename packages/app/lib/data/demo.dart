@@ -50,6 +50,41 @@ class Permohonan {
   const Permohonan(this.jenis, this.nomor, this.tanggal, this.status);
 }
 
+const _bulan = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+String fmtTanggal(String iso) {
+  final d = DateTime.tryParse(iso)?.toLocal();
+  if (d == null) return iso;
+  return '${d.day} ${_bulan[d.month]} ${d.year}';
+}
+
+String suratTypeTitle(String code) {
+  switch (code) {
+    case 'SURAT_PENGANTAR':
+      return 'Surat Pengantar';
+    case 'SKTM':
+      return 'Surat Keterangan Tidak Mampu';
+    case 'DOMISILI':
+      return 'Surat Keterangan Domisili';
+    default:
+      return code;
+  }
+}
+
+StatusSurat statusSuratFrom(String s) {
+  switch (s) {
+    case 'DRAFTED':
+      return StatusSurat.diverifikasi;
+    case 'SIGNED':
+      return StatusSurat.selesai;
+    case 'REJECTED':
+      return StatusSurat.ditolak;
+    case 'SUBMITTED':
+    default:
+      return StatusSurat.diajukan;
+  }
+}
+
 const permohonanSaya = <Permohonan>[
   Permohonan('Surat Keterangan Domisili', '2026/SKD/001', '12 Juli 2026', StatusSurat.diverifikasi),
   Permohonan('Surat Keterangan Tidak Mampu', '2025/SKTM/034', '2 Juli 2026', StatusSurat.selesai),
@@ -61,6 +96,28 @@ class Janji {
   final String waktu;
   final String status;
   const Janji(this.keperluan, this.waktu, this.status);
+}
+
+String fmtWaktu(String iso) {
+  final d = DateTime.tryParse(iso)?.toLocal();
+  if (d == null) return iso;
+  final hh = d.hour.toString().padLeft(2, '0');
+  final mm = d.minute.toString().padLeft(2, '0');
+  return '${d.day} ${_bulan[d.month]} ${d.year} · $hh:$mm';
+}
+
+String janjiStatusLabel(String s) {
+  switch (s) {
+    case 'CONFIRMED':
+      return 'Terjadwal';
+    case 'CHECKED_IN':
+      return 'Selesai';
+    case 'CANCELLED':
+      return 'Dibatalkan';
+    case 'REQUESTED':
+    default:
+      return 'Menunggu konfirmasi';
+  }
 }
 
 const janjiSaya = <Janji>[
