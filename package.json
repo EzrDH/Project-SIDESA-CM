@@ -6,9 +6,10 @@
     "test": "npm -w @sidesa/crypto test && npm -w @sidesa/backend test",
     "test:crypto": "npm -w @sidesa/crypto test",
     "test:backend": "npm -w @sidesa/backend test",
+    "build:crypto": "npm -w @sidesa/crypto run build",
     "db:up": "docker start sidesa-pg || docker run --name sidesa-pg -e POSTGRES_PASSWORD=devpass -e POSTGRES_DB=sidesa -p 5432:5432 -d postgres:16",
     "db:down": "docker stop sidesa-pg",
     "db:migrate": "cd packages/backend && npx prisma migrate deploy && npx prisma generate",
-    "backend:dev": "npm -w @sidesa/backend run start:dev"
+    "backend:dev": "npm run build:crypto && npm -w @sidesa/backend run start:dev"
   }
 }

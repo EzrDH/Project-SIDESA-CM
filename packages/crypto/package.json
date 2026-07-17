@@ -1,12 +1,21 @@
 {
   "name": "@sidesa/crypto",
   "version": "0.1.0",
-  "type": "module",
   "description": "SIDESA-CM cryptographic core (ECDSA P-384, Merkle, Schnorr ZKP) — Kepka BSSN 443/2025 compliant",
-  "main": "src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
   "scripts": {
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
     "@noble/curves": "^1.6.0",

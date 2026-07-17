@@ -6,3 +6,6 @@ build/
 .env
 .idea/
 *.zip
+
+# MS Office lock/temp files
+~$*
