@@ -6,6 +6,7 @@ import 'state/session_scope.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/operator_shell.dart';
+import 'screens/kades_shell.dart';
 
 void main() => runApp(SidesaApp(session: Session()));
 
@@ -62,9 +63,10 @@ class _RootGateState extends State<RootGate> {
   @override
   Widget build(BuildContext context) {
     if (!_loggedIn) return LoginScreen(onLogin: _login);
-    // Operators land on the verification queue; everyone else on the warga shell.
-    return SessionScope.of(context).isOperator
-        ? OperatorShell(onLogout: _logout)
-        : MainShell(onLogout: _logout);
+    // Each role lands on its own home: operator queue, Kepala Desa signing, or warga shell.
+    final session = SessionScope.of(context);
+    if (session.isOperator) return OperatorShell(onLogout: _logout);
+    if (session.isKades) return KadesShell(onLogout: _logout);
+    return MainShell(onLogout: _logout);
   }
 }

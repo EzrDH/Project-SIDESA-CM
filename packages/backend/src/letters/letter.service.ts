@@ -36,6 +36,14 @@ export class LetterService {
     return rows.map((r) => ({ id: r.id, type: r.type, createdAt: r.createdAt }));
   }
 
+  async listSigningQueue() {
+    const rows = await this.prisma.letterRequest.findMany({
+      where: { status: 'DRAFTED' },
+      orderBy: { createdAt: 'asc' },
+    });
+    return rows.map((r) => ({ id: r.id, type: r.type, letterNumber: r.draftNumber, createdAt: r.createdAt }));
+  }
+
   async listForWarga(wargaAccountId: string) {
     const rows = await this.prisma.letterRequest.findMany({
       where: { wargaAccountId },

@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import '../api/api_client.dart';
 import '../auth/auth_service.dart';
 import '../crypto/ecdsa.dart';
@@ -36,6 +38,7 @@ class Session {
   }
 
   bool get isOperator => role == 'OPERATOR';
+  bool get isKades => role == 'KADES';
 
   void logout() {
     token = null;
@@ -73,4 +76,21 @@ class Session {
 
   /// Reject a request.
   Future<void> tolakSurat(String requestId) async => api.postJson('/letters/$requestId/reject', const {});
+
+  // --- Kepala Desa (signing) calls ---
+
+  /// Drafted letters awaiting the Kepala Desa's signature.
+  Future<List<dynamic>> antrianTtd() async => (await api.getJson('/letters/signing-queue')) as List<dynamic>;
+
+  /// Fetch the canonical content + document hash to be signed.
+  Future<Map<String, dynamic>> ambilUntukTtd(String requestId) async =>
+      (await api.getJson('/letters/$requestId/for-signing')) as Map<String, dynamic>;
+
+  /// Sign the canonical letter on-device (ECDSA P-384; the private key never
+  /// leaves the device) and submit the signature. Returns {letterNumber, qrToken}.
+  Future<Map<String, dynamic>> tandatanganiSurat(String requestId, String canonicalContent) async {
+    final message = Uint8List.fromList(utf8.encode(canonicalContent));
+    final signature = bytesToHex(await keyStore.sign(message));
+    return api.postJson('/letters/$requestId/sign', {'signature': signature});
+  }
 }

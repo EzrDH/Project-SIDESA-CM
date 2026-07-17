@@ -44,6 +44,13 @@ export class LetterController {
     return this.letters.reject(id);
   }
 
+  @Get('signing-queue')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('KADES')
+  signingQueue() {
+    return this.letters.listSigningQueue();
+  }
+
   @Get(':id/for-signing')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('KADES')

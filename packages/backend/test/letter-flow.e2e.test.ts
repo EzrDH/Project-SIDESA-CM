@@ -55,9 +55,19 @@ describe('Letter flow (e2e, needs Postgres)', () => {
 
     await request(app.getHttpServer()).post(`/letters/${id}/draft`).set('Authorization', `Bearer ${opToken}`).expect(201);
 
+    // KaDes sees the drafted letter in the signing queue, with its assigned number.
+    const sq = await request(app.getHttpServer()).get('/letters/signing-queue').set('Authorization', `Bearer ${kaToken}`).expect(200);
+    const queued = (sq.body as any[]).find((r) => r.id === id);
+    expect(queued).toBeTruthy();
+    expect(queued.letterNumber).toBeTruthy();
+
     const fs = await request(app.getHttpServer()).get(`/letters/${id}/for-signing`).set('Authorization', `Bearer ${kaToken}`).expect(200);
     const sig = hex(signMessage(kades.privateKey, enc.encode(fs.body.canonicalContent)));
     const signed = await request(app.getHttpServer()).post(`/letters/${id}/sign`).set('Authorization', `Bearer ${kaToken}`).send({ signature: sig }).expect(201);
+
+    // Once signed, it leaves the signing queue.
+    const sq2 = await request(app.getHttpServer()).get('/letters/signing-queue').set('Authorization', `Bearer ${kaToken}`).expect(200);
+    expect((sq2.body as any[]).find((r) => r.id === id)).toBeFalsy();
 
     const v = await request(app.getHttpServer()).get(`/verify/${signed.body.qrToken}`).expect(200);
     expect(v.body.valid).toBe(true);
