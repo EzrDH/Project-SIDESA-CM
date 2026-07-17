@@ -5,6 +5,7 @@ import 'state/session.dart';
 import 'state/session_scope.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
+import 'screens/operator_shell.dart';
 
 void main() => runApp(SidesaApp(session: Session()));
 
@@ -60,6 +61,10 @@ class _RootGateState extends State<RootGate> {
 
   @override
   Widget build(BuildContext context) {
-    return _loggedIn ? MainShell(onLogout: _logout) : LoginScreen(onLogin: _login);
+    if (!_loggedIn) return LoginScreen(onLogin: _login);
+    // Operators land on the verification queue; everyone else on the warga shell.
+    return SessionScope.of(context).isOperator
+        ? OperatorShell(onLogout: _logout)
+        : MainShell(onLogout: _logout);
   }
 }

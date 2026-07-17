@@ -13,6 +13,7 @@ class Session {
 
   String? token;
   String? accountId;
+  String? role;
 
   Session({ApiClient? api, KeyStore? keyStore})
       : api = api ?? ApiClient(AppConfig.baseUrl),
@@ -27,14 +28,19 @@ class Session {
 
   /// Key-possession login: fetch a challenge, sign it, exchange for a JWT.
   Future<void> login(String accountId) async {
-    token = await _auth.login(accountId);
+    final res = await _auth.login(accountId);
+    token = res.token;
+    role = res.role;
     api.authToken = token;
     this.accountId = accountId;
   }
 
+  bool get isOperator => role == 'OPERATOR';
+
   void logout() {
     token = null;
     accountId = null;
+    role = null;
     api.authToken = null;
   }
 
@@ -55,4 +61,16 @@ class Session {
   }
 
   Future<List<dynamic>> janjiSaya() async => (await api.getJson('/bookings/mine')) as List<dynamic>;
+
+  // --- Operator calls ---
+
+  /// Pending letter requests awaiting operator verification.
+  Future<List<dynamic>> antrianSurat() async => (await api.getJson('/letters/queue')) as List<dynamic>;
+
+  /// Verify a request: draft it (assigns a letter number, ready for the Kepala Desa).
+  Future<Map<String, dynamic>> verifikasiSurat(String requestId) async =>
+      api.postJson('/letters/$requestId/draft', const {});
+
+  /// Reject a request.
+  Future<void> tolakSurat(String requestId) async => api.postJson('/letters/$requestId/reject', const {});
 }

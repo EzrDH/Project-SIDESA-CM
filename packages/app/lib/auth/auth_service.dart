@@ -9,7 +9,7 @@ class AuthService {
   final KeyStore _keyStore;
   AuthService(this._api, this._keyStore);
 
-  Future<String> login(String accountId) async {
+  Future<({String token, String role})> login(String accountId) async {
     final ch = await _api.postJson('/auth/challenge', {'accountId': accountId});
     final nonce = ch['nonce'] as String;
     final message = Uint8List.fromList(utf8.encode('SIDESA-auth-v1|$accountId|$nonce'));
@@ -19,6 +19,6 @@ class AuthService {
       'nonce': nonce,
       'signature': signature,
     });
-    return vr['token'] as String;
+    return (token: vr['token'] as String, role: (vr['role'] as String?) ?? 'WARGA');
   }
 }

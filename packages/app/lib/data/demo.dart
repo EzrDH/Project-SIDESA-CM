@@ -91,6 +91,19 @@ const permohonanSaya = <Permohonan>[
   Permohonan('Surat Pengantar', '—', '28 Juni 2026', StatusSurat.ditolak),
 ];
 
+/// A pending letter request as seen by the operator queue.
+class Antrian {
+  final String id;
+  final String jenis;
+  final String tanggal;
+  const Antrian(this.id, this.jenis, this.tanggal);
+}
+
+const antrianDemo = <Antrian>[
+  Antrian('demo-1', 'Surat Keterangan Domisili', '17 Jul 2026'),
+  Antrian('demo-2', 'Surat Keterangan Tidak Mampu', '16 Jul 2026'),
+];
+
 class Janji {
   final String keperluan;
   final String waktu;

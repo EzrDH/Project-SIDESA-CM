@@ -9,7 +9,7 @@ import 'package:sidesa_app/crypto/ecdsa.dart';
 import 'package:sidesa_app/crypto/keystore.dart';
 
 void main() {
-  test('login runs challenge -> sign -> verify and returns a token', () async {
+  test('login runs challenge -> sign -> verify and returns token + role', () async {
     final kp = generateKeyPair();
     final ks = InMemoryKeyStore(kp.privateKey);
 
@@ -33,7 +33,8 @@ void main() {
 
     final api = ApiClient('http://test', client: mock);
     final auth = AuthService(api, ks);
-    final token = await auth.login('acc-1');
-    expect(token, 'jwt-token');
+    final res = await auth.login('acc-1');
+    expect(res.token, 'jwt-token');
+    expect(res.role, 'WARGA');
   });
 }
