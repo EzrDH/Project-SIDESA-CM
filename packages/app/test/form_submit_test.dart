@@ -22,7 +22,15 @@ void main() {
     String? postedPath;
     Map<String, dynamic>? postedBody;
     final mock = MockClient((req) async {
-      postedPath = req.url.path;
+      final path = req.url.path;
+      // ZKP gate: ajukanSurat first fetches a nonce and a membership proof.
+      if (path.endsWith('/letters/eligibility-challenge')) {
+        return http.Response(jsonEncode({'nonce': 'nonce-1'}), 201);
+      }
+      if (path.endsWith('/registry/proof')) {
+        return http.Response(jsonEncode({'attributes': 'rt=001', 'merkleProof': <dynamic>[]}), 200);
+      }
+      postedPath = path;
       postedBody = jsonDecode(req.body) as Map<String, dynamic>;
       return http.Response(jsonEncode({'id': 'req-1'}), 201);
     });
@@ -60,5 +68,9 @@ void main() {
     expect(postedPath, contains('/letters/request'));
     expect(postedBody?['type'], 'DOMISILI');
     expect((postedBody?['formData'] as Map)['tujuan'], 'melamar kerja');
+    // The request carries a zero-knowledge eligibility proof + single-use nonce.
+    final el = postedBody?['eligibility'] as Map<String, dynamic>;
+    expect(el['nonce'], 'nonce-1');
+    expect((el['proof'] as Map)['ownership'], isNotNull);
   });
 }

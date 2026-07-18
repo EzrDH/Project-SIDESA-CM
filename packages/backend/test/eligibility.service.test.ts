@@ -11,7 +11,8 @@ describe('EligibilityService.verify', () => {
   const attrs = 'rt=007';
   const entries = [{ publicKey: bytesToHex(derivePublic(secret)), attributes: attrs }];
   const tree = buildRegistryTree(entries);
-  const svc = new EligibilityService({ activeRootHex: async () => rootHex(tree) } as any);
+  const prismaStub = {} as any; // verify() doesn't touch the DB
+  const svc = new EligibilityService({ activeRootHex: async () => rootHex(tree) } as any, prismaStub);
 
   function dtoFor(context: string) {
     const p = proveEligibility(secret, enc.encode(attrs), tree, 0, enc.encode(context));
@@ -32,7 +33,7 @@ describe('EligibilityService.verify', () => {
   });
 
   it('rejects when there is no active root', async () => {
-    const svc2 = new EligibilityService({ activeRootHex: async () => null } as any);
+    const svc2 = new EligibilityService({ activeRootHex: async () => null } as any, prismaStub);
     expect((await svc2.verify(dtoFor('req-1'), 'req-1')).valid).toBe(false);
   });
 });

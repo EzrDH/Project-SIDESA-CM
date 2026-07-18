@@ -31,6 +31,7 @@ model Account {
   leafIndex     Int?            @unique
   createdAt     DateTime        @default(now())
   challenges    AuthChallenge[]
+  eligibilityChallenges EligibilityChallenge[]
 }
 
 model RegistryVersion {
@@ -102,6 +103,18 @@ model Booking {
 }
 
 model AuthChallenge {
+  id        String   @id @default(uuid())
+  accountId String
+  account   Account  @relation(fields: [accountId], references: [id])
+  nonce     String   @unique
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+/// Single-use nonce that binds a ZKP eligibility proof to one letter request,
+/// so a captured proof cannot be replayed (even with a stolen session token).
+model EligibilityChallenge {
   id        String   @id @default(uuid())
   accountId String
   account   Account  @relation(fields: [accountId], references: [id])

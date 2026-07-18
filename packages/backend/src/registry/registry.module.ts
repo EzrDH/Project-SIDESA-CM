@@ -10,5 +10,6 @@ import { EligibilityController } from './eligibility.controller';
   imports: [JwtModule.register({ secret: process.env.JWT_SECRET ?? 'test-secret' })],
   controllers: [RegistryController, EligibilityController],
   providers: [PrismaService, RegistryService, EligibilityService],
+  exports: [RegistryService, EligibilityService],
 })
 export class RegistryModule {}

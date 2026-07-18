@@ -1,18 +1,35 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, ForbiddenException, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../rbac/roles.guard';
 import { Roles } from '../rbac/roles.decorator';
 import { LetterService } from './letter.service';
 import { LetterType } from './letter.template';
+import { EligibilityService, EligibilityProofDto } from '../registry/eligibility.service';
 
 @Controller('letters')
 export class LetterController {
-  constructor(private readonly letters: LetterService) {}
+  constructor(
+    private readonly letters: LetterService,
+    private readonly eligibility: EligibilityService,
+  ) {}
+
+  @Post('eligibility-challenge')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('WARGA')
+  eligibilityChallenge(@Req() req: any) {
+    return this.eligibility.issueChallenge(req.user.accountId);
+  }
 
   @Post('request')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('WARGA')
-  request(@Req() req: any, @Body() body: { type: LetterType; formData: Record<string, string> }) {
+  async request(
+    @Req() req: any,
+    @Body() body: { type: LetterType; formData: Record<string, string>; eligibility: { proof: EligibilityProofDto; nonce: string } },
+  ) {
+    const el = body.eligibility;
+    const ok = el && (await this.eligibility.consumeAndVerify(req.user.accountId, body.type, el.proof, el.nonce));
+    if (!ok) throw new ForbiddenException('Bukti kelayakan (ZKP) tidak valid atau kedaluwarsa.');
     return this.letters.createRequest(req.user.accountId, body.type, body.formData);
   }
 

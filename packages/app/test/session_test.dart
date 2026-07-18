@@ -50,6 +50,12 @@ void main() {
         return http.Response(jsonEncode({'token': 'jwt-2', 'role': 'WARGA'}), 201);
       }
       seenAuth = req.headers['authorization'];
+      if (req.url.path.endsWith('/letters/eligibility-challenge')) {
+        return http.Response(jsonEncode({'nonce': 'nonce-9'}), 201);
+      }
+      if (req.url.path.endsWith('/registry/proof')) {
+        return http.Response(jsonEncode({'attributes': 'rt=001', 'merkleProof': <dynamic>[]}), 200);
+      }
       if (req.url.path.endsWith('/letters/request')) {
         return http.Response(jsonEncode({'id': 'req-1'}), 201);
       }

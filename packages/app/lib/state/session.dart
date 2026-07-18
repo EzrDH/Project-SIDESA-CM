@@ -49,9 +49,28 @@ class Session {
 
   // --- Authenticated calls ---
 
-  /// Submit a letter request; returns the request id.
+  /// Submit a letter request, gated by a zero-knowledge eligibility proof.
+  ///
+  /// Flow: fetch a single-use nonce, fetch this account's Merkle membership
+  /// proof, then prove — in zero knowledge — ownership of the registered
+  /// pseudonymous key bound to (account, type, nonce). The raw NIK is never
+  /// sent; the server verifies membership + ownership and burns the nonce.
   Future<String> ajukanSurat(String type, Map<String, String> formData) async {
-    final res = await api.postJson('/letters/request', {'type': type, 'formData': formData});
+    final nonce = (await api.postJson('/letters/eligibility-challenge', const {}))['nonce'] as String;
+    final rp = (await api.getJson('/registry/proof')) as Map<String, dynamic>;
+    final pub = await keyStore.publicKey();
+    final context = utf8.encode('SIDESA-letter-eligibility-v1|$accountId|$type|$nonce');
+    final sp = await keyStore.proveKnowledge(Uint8List.fromList(context));
+    final eligibility = {
+      'proof': {
+        'publicKey': bytesToHex(pub),
+        'attributes': rp['attributes'],
+        'merkleProof': rp['merkleProof'],
+        'ownership': {'R': bytesToHex(sp.R), 's': bytesToHex(sp.s)},
+      },
+      'nonce': nonce,
+    };
+    final res = await api.postJson('/letters/request', {'type': type, 'formData': formData, 'eligibility': eligibility});
     return res['id'] as String;
   }
 
