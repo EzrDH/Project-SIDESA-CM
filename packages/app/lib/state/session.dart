@@ -49,24 +49,25 @@ class Session {
 
   // --- Authenticated calls ---
 
-  /// Submit a letter request, gated by a zero-knowledge eligibility proof.
+  /// Submit a letter request, gated by an eligibility proof.
   ///
   /// Flow: fetch a single-use nonce, fetch this account's Merkle membership
-  /// proof, then prove — in zero knowledge — ownership of the registered
-  /// pseudonymous key bound to (account, type, nonce). The raw NIK is never
-  /// sent; the server verifies membership + ownership and burns the nonce.
+  /// proof, then sign the (account, type, nonce) context to prove control of
+  /// the registered pseudonymous key. The raw NIK is never sent; the server
+  /// verifies membership + ownership and burns the nonce. Ownership is an ECDSA
+  /// signature (not Schnorr) so a hardware-backed key can produce it too.
   Future<String> ajukanSurat(String type, Map<String, String> formData) async {
     final nonce = (await api.postJson('/letters/eligibility-challenge', const {}))['nonce'] as String;
     final rp = (await api.getJson('/registry/proof')) as Map<String, dynamic>;
     final pub = await keyStore.publicKey();
     final context = utf8.encode('SIDESA-letter-eligibility-v1|$accountId|$type|$nonce');
-    final sp = await keyStore.proveKnowledge(Uint8List.fromList(context));
+    final ownership = await keyStore.sign(Uint8List.fromList(context));
     final eligibility = {
       'proof': {
         'publicKey': bytesToHex(pub),
         'attributes': rp['attributes'],
         'merkleProof': rp['merkleProof'],
-        'ownership': {'R': bytesToHex(sp.R), 's': bytesToHex(sp.s)},
+        'ownership': bytesToHex(ownership),
       },
       'nonce': nonce,
     };

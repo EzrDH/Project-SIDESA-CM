@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { generateKeyPair, getPublicKey, signMessage, proveKnowledge } from '@sidesa/crypto';
+import { generateKeyPair, signMessage } from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
 import { hexToBytes } from '../src/registry/registry.builder';
@@ -25,7 +25,6 @@ describe('ZKP eligibility flow (e2e, needs Postgres)', () => {
   const kades = generateKeyPair();
   const warga = generateKeyPair();
   const opPk = hex(operator.publicKey), kaPk = hex(kades.publicKey), waPk = hex(warga.publicKey);
-  const wargaScalar = BigInt('0x' + hex(warga.privateKey));
   let opId = '', kaId = '', waId = '';
 
   beforeAll(async () => {
@@ -68,12 +67,12 @@ describe('ZKP eligibility flow (e2e, needs Postgres)', () => {
       .set('Authorization', `Bearer ${waToken}`).expect(200);
 
     const context = 'permohonan:SKTM:seq=1';
-    const ownership = proveKnowledge(wargaScalar, getPublicKey(warga.privateKey), enc.encode(context));
+    const ownership = hex(signMessage(warga.privateKey, enc.encode(context)));
     const proof = {
       publicKey: waPk,
       attributes: p.body.attributes,
       merkleProof: p.body.merkleProof,
-      ownership: { R: hex(ownership.R), s: hex(ownership.s) },
+      ownership,
     };
 
     const res = await request(app.getHttpServer()).post('/eligibility/verify').send({ proof, context }).expect(201);

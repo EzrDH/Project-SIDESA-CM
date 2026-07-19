@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'ecdsa.dart';
 import 'keystore.dart';
-import 'schnorr.dart';
 
 /// KeyStore backed by Android Keystore (StrongBox/TEE), with a biometric prompt
 /// on every signature. The private key never enters Dart memory; only the
@@ -41,13 +40,5 @@ class AndroidKeyStore implements KeyStore {
       'reason': 'Verifikasi sidik jari untuk melanjutkan',
     });
     return hexToBytes(hex!);
-  }
-
-  @override
-  Future<SchnorrProof> proveKnowledge(Uint8List context) {
-    // Hardware keys expose only ECDSA — never the raw scalar Schnorr needs.
-    throw UnsupportedError(
-        'Bukti Schnorr tidak didukung kunci hardware. Gate eligibility warga '
-        'perlu kunci software, atau migrasi ownership ke ECDSA-over-context.');
   }
 }

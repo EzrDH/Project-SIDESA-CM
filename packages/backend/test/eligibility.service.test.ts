@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { randomScalar, derivePublic, proveEligibility } from '@sidesa/crypto';
+import { generateKeyPair, proveEligibility } from '@sidesa/crypto';
 import { buildRegistryTree, rootHex, bytesToHex } from '../src/registry/registry.builder';
 import { EligibilityService } from '../src/registry/eligibility.service';
 
@@ -7,20 +7,20 @@ const enc = new TextEncoder();
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
 
 describe('EligibilityService.verify', () => {
-  const secret = randomScalar();
+  const kp = generateKeyPair();
   const attrs = 'rt=007';
-  const entries = [{ publicKey: bytesToHex(derivePublic(secret)), attributes: attrs }];
+  const entries = [{ publicKey: bytesToHex(kp.publicKey), attributes: attrs }];
   const tree = buildRegistryTree(entries);
   const prismaStub = {} as any; // verify() doesn't touch the DB
   const svc = new EligibilityService({ activeRootHex: async () => rootHex(tree) } as any, prismaStub);
 
   function dtoFor(context: string) {
-    const p = proveEligibility(secret, enc.encode(attrs), tree, 0, enc.encode(context));
+    const p = proveEligibility(kp.privateKey, enc.encode(attrs), tree, 0, enc.encode(context));
     return {
       publicKey: hex(p.publicKey),
       attributes: attrs,
       merkleProof: p.merkleProof.map((s) => ({ sibling: hex(s.sibling), isRight: s.isRight })),
-      ownership: { R: hex(p.ownership.R), s: hex(p.ownership.s) },
+      ownership: hex(p.ownership),
     };
   }
 

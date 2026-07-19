@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { generateKeyPair, getPublicKey, signMessage, proveKnowledge } from '@sidesa/crypto';
+import { generateKeyPair, signMessage } from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
 import { buildEligibilityContext } from '../src/registry/eligibility.context';
@@ -23,7 +23,6 @@ describe('Letter flow (e2e, needs Postgres)', () => {
   let prisma: PrismaService;
   const operator = generateKeyPair(), kades = generateKeyPair(), warga = generateKeyPair();
   const opPk = hex(operator.publicKey), kaPk = hex(kades.publicKey), waPk = hex(warga.publicKey);
-  const wargaScalar = BigInt('0x' + hex(warga.privateKey));
   let opId = '', kaId = '', waId = '';
 
   // A warga now needs a fresh ZKP eligibility proof (bound to a single-use nonce)
@@ -32,12 +31,12 @@ describe('Letter flow (e2e, needs Postgres)', () => {
     const ch = await request(app.getHttpServer()).post('/letters/eligibility-challenge').set('Authorization', `Bearer ${waToken}`).expect(201);
     const p = await request(app.getHttpServer()).get('/registry/proof').set('Authorization', `Bearer ${waToken}`).expect(200);
     const context = buildEligibilityContext(waId, type, ch.body.nonce);
-    const ownership = proveKnowledge(wargaScalar, getPublicKey(warga.privateKey), enc.encode(context));
+    const ownership = hex(signMessage(warga.privateKey, enc.encode(context)));
     const proof = {
       publicKey: waPk,
       attributes: p.body.attributes,
       merkleProof: p.body.merkleProof,
-      ownership: { R: hex(ownership.R), s: hex(ownership.s) },
+      ownership,
     };
     return request(app.getHttpServer()).post('/letters/request')
       .set('Authorization', `Bearer ${waToken}`)
@@ -118,8 +117,8 @@ describe('Letter flow (e2e, needs Postgres)', () => {
     const ch = await request(app.getHttpServer()).post('/letters/eligibility-challenge').set('Authorization', `Bearer ${waToken}`).expect(201);
     const p = await request(app.getHttpServer()).get('/registry/proof').set('Authorization', `Bearer ${waToken}`).expect(200);
     const context = buildEligibilityContext(waId, 'DOMISILI', ch.body.nonce);
-    const ownership = proveKnowledge(wargaScalar, getPublicKey(warga.privateKey), enc.encode(context));
-    const proof = { publicKey: waPk, attributes: p.body.attributes, merkleProof: p.body.merkleProof, ownership: { R: hex(ownership.R), s: hex(ownership.s) } };
+    const ownership = hex(signMessage(warga.privateKey, enc.encode(context)));
+    const proof = { publicKey: waPk, attributes: p.body.attributes, merkleProof: p.body.merkleProof, ownership };
     const body = { type: 'DOMISILI', formData: { nama: 'Budi' }, eligibility: { proof, nonce: ch.body.nonce } };
 
     await request(app.getHttpServer()).post('/letters/request').set('Authorization', `Bearer ${waToken}`).send(body).expect(201);

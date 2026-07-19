@@ -9,7 +9,7 @@ export interface EligibilityProofDto {
   publicKey: string;
   attributes: string;
   merkleProof: { sibling: string; isRight: boolean }[];
-  ownership: { R: string; s: string };
+  ownership: string; // compact ECDSA signature (hex) over the request context
 }
 
 const enc = new TextEncoder();
@@ -35,7 +35,7 @@ export class EligibilityService {
       publicKey: hexToBytes(dto.publicKey),
       attributes: enc.encode(dto.attributes),
       merkleProof: dto.merkleProof.map((s) => ({ sibling: hexToBytes(s.sibling), isRight: s.isRight })),
-      ownership: { R: hexToBytes(dto.ownership.R), s: hexToBytes(dto.ownership.s) },
+      ownership: hexToBytes(dto.ownership),
     };
     const valid = verifyEligibility(proof, hexToBytes(rootHexStr), enc.encode(context));
     return { valid };
