@@ -19,7 +19,8 @@ android {
         applicationId = "id.desa.cibeteungmuara.sidesa_app"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Android Keystore user-authentication-required keys need API 23+.
+        minSdk = maxOf(23, flutter.minSdkVersion)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -42,4 +43,9 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // BiometricPrompt for hardware-backed, biometric-gated signing.
+    implementation("androidx.biometric:biometric:1.1.0")
 }

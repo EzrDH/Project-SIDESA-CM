@@ -13,4 +13,10 @@ class AppConfig {
   /// --dart-define=SIDESA_PRIVKEY=<hex>
   static const String devPrivKey =
       String.fromEnvironment('SIDESA_PRIVKEY', defaultValue: '');
+
+  /// Use the hardware-backed, biometric-gated Android Keystore key instead of
+  /// the in-memory dev key. --dart-define=SIDESA_HARDWARE=1 (or =true)
+  static const bool useHardwareKey =
+      bool.fromEnvironment('SIDESA_HARDWARE', defaultValue: false) ||
+          String.fromEnvironment('SIDESA_HARDWARE') == '1';
 }

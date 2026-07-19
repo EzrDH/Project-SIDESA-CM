@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'app_config.dart';
+import 'crypto/android_keystore.dart';
+import 'crypto/ecdsa.dart';
 import 'state/session.dart';
 import 'state/session_scope.dart';
 import 'screens/login_screen.dart';
@@ -8,7 +11,22 @@ import 'screens/main_shell.dart';
 import 'screens/operator_shell.dart';
 import 'screens/kades_shell.dart';
 
-void main() => runApp(SidesaApp(session: Session()));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(SidesaApp(session: await _buildSession()));
+}
+
+/// Prefer the hardware-backed, biometric-gated key when requested and available;
+/// otherwise fall back to the in-memory dev key.
+Future<Session> _buildSession() async {
+  if (AppConfig.useHardwareKey && await AndroidKeyStore.isAvailable()) {
+    const ks = AndroidKeyStore();
+    final pub = await ks.ensureKey();
+    debugPrint('SIDESA hardware public key: ${bytesToHex(pub)}');
+    return Session(keyStore: ks);
+  }
+  return Session();
+}
 
 class SidesaApp extends StatelessWidget {
   final Session session;
