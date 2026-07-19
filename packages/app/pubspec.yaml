@@ -37,6 +37,8 @@ dependencies:
 
   pointycastle: ^3.9.1
   http: ^1.2.0
+  pdf: ^3.11.0
+  printing: ^5.13.0
 
 dev_dependencies:
   flutter_test:

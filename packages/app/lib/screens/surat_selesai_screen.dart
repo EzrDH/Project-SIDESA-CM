@@ -1,11 +1,66 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 import '../theme.dart';
 import '../data/demo.dart';
 import '../widgets/ui.dart';
+import '../pdf/letter_pdf.dart';
+import '../state/session.dart';
+import '../state/session_scope.dart';
 
-class SuratSelesaiScreen extends StatelessWidget {
+class SuratSelesaiScreen extends StatefulWidget {
   final Permohonan permohonan;
   const SuratSelesaiScreen({super.key, required this.permohonan});
+
+  @override
+  State<SuratSelesaiScreen> createState() => _SuratSelesaiScreenState();
+}
+
+class _SuratSelesaiScreenState extends State<SuratSelesaiScreen> {
+  bool _busy = false;
+
+  Permohonan get permohonan => widget.permohonan;
+
+  /// Fetch the publicly-verified content and hand it to the PDF renderer.
+  Future<void> _withPdf(Future<void> Function(Uint8List bytes, String name) sink) async {
+    final session = SessionScope.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final token = permohonan.qrToken;
+    if (token == null || !session.isLoggedIn) {
+      messenger.showSnackBar(const SnackBar(content: Text('Surat demo — PDF tersedia untuk surat yang sudah ditandatangani.')));
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final v = await session.suratTerverifikasi(token);
+      if (v['valid'] != true) throw Exception('invalid');
+      final bytes = await buildLetterPdf(
+        title: permohonan.jenis,
+        letterNumber: (v['letterNumber'] as String?) ?? permohonan.nomor,
+        canonicalContent: (v['content'] as String?) ?? '',
+        signer: (v['signer'] as String?) ?? 'Kepala Desa',
+        signedAt: _fmt(v['signedAt'] as String?),
+        verifyUrl: session.verifyUrl(token),
+      );
+      await sink(bytes, 'Surat-${permohonan.nomor.replaceAll('/', '-')}.pdf');
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('Gagal menyiapkan PDF. Coba lagi.')));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  String _fmt(String? iso) {
+    final d = DateTime.tryParse(iso ?? '')?.toLocal();
+    return d == null ? '-' : fmtTanggal(d.toIso8601String());
+  }
+
+  Future<void> _unduh() => _withPdf((bytes, name) => Printing.layoutPdf(onLayout: (_) async => bytes, name: name));
+  Future<void> _bagikan() async {
+    await _withPdf((bytes, name) async {
+      await Printing.sharePdf(bytes: bytes, filename: name);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,19 +110,17 @@ class SuratSelesaiScreen extends StatelessWidget {
           Row(children: [
             Expanded(
               child: FilledButton.icon(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Mengunduh PDF surat…')),
-                ),
-                icon: const Icon(Icons.download),
-                label: const Text('Unduh PDF'),
+                onPressed: _busy ? null : _unduh,
+                icon: _busy
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Icon(Icons.download),
+                label: Text(_busy ? 'Menyiapkan…' : 'Unduh PDF'),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Membagikan surat…')),
-                ),
+                onPressed: _busy ? null : _bagikan,
                 icon: const Icon(Icons.share_outlined),
                 label: const Text('Bagikan'),
               ),

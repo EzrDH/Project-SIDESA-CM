@@ -47,7 +47,8 @@ class Permohonan {
   final String nomor;
   final String tanggal;
   final StatusSurat status;
-  const Permohonan(this.jenis, this.nomor, this.tanggal, this.status);
+  final String? qrToken; // present once SIGNED — enables PDF download + verify
+  const Permohonan(this.jenis, this.nomor, this.tanggal, this.status, {this.qrToken});
 }
 
 const _bulan = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];

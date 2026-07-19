@@ -76,6 +76,14 @@ class Session {
 
   Future<List<dynamic>> suratSaya() async => (await api.getJson('/letters/mine')) as List<dynamic>;
 
+  /// Public verification of a signed letter by its QR token — returns the
+  /// verified canonical content, signer and signing date.
+  Future<Map<String, dynamic>> suratTerverifikasi(String qrToken) async =>
+      (await api.getJson('/verify/$qrToken')) as Map<String, dynamic>;
+
+  /// Absolute URL a QR should encode so a scanner reaches the public verifier.
+  String verifyUrl(String qrToken) => '${api.baseUrl}/verify/$qrToken';
+
   /// Book an appointment; returns the booking id.
   Future<String> buatJanji(String purpose, String requestedSlotIso) async {
     final res = await api.postJson('/bookings', {'purpose': purpose, 'requestedSlot': requestedSlotIso});

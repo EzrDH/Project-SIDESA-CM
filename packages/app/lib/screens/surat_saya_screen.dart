@@ -31,6 +31,7 @@ class _SuratSayaScreenState extends State<SuratSayaScreen> {
               (r['letterNumber'] as String?) ?? '—',
               fmtTanggal(r['createdAt'] as String),
               statusSuratFrom(r['status'] as String),
+              qrToken: r['qrToken'] as String?,
             ))
         .toList();
   }
