@@ -5,12 +5,14 @@ import { Roles } from '../rbac/roles.decorator';
 import { LetterService } from './letter.service';
 import { LetterType } from './letter.template';
 import { EligibilityService, EligibilityProofDto } from '../registry/eligibility.service';
+import { AuditService } from '../audit/audit.service';
 
 @Controller('letters')
 export class LetterController {
   constructor(
     private readonly letters: LetterService,
     private readonly eligibility: EligibilityService,
+    private readonly audit: AuditService,
   ) {}
 
   @Post('eligibility-challenge')
@@ -50,15 +52,19 @@ export class LetterController {
   @Post(':id/draft')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OPERATOR')
-  draft(@Param('id') id: string) {
-    return this.letters.draft(id);
+  async draft(@Req() req: any, @Param('id') id: string) {
+    const res = await this.letters.draft(id);
+    await this.audit.record(req.user.accountId, 'LETTER_DRAFT', id, { letterNumber: res.letterNumber });
+    return res;
   }
 
   @Post(':id/reject')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OPERATOR')
-  reject(@Param('id') id: string) {
-    return this.letters.reject(id);
+  async reject(@Req() req: any, @Param('id') id: string) {
+    const res = await this.letters.reject(id);
+    await this.audit.record(req.user.accountId, 'LETTER_REJECT', id, {});
+    return res;
   }
 
   @Get('signing-queue')
@@ -78,7 +84,12 @@ export class LetterController {
   @Post(':id/sign')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('KADES')
-  sign(@Req() req: any, @Param('id') id: string, @Body() body: { signature: string }) {
-    return this.letters.sign(req.user.accountId, id, body.signature);
+  async sign(@Req() req: any, @Param('id') id: string, @Body() body: { signature: string }) {
+    const res = await this.letters.sign(req.user.accountId, id, body.signature);
+    await this.audit.record(req.user.accountId, 'LETTER_SIGN', id, {
+      letterNumber: res.letterNumber,
+      qrToken: res.qrToken,
+    });
+    return res;
   }
 }

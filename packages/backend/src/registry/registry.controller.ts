@@ -3,16 +3,22 @@ import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../rbac/roles.guard';
 import { Roles } from '../rbac/roles.decorator';
 import { RegistryService } from './registry.service';
+import { AuditService } from '../audit/audit.service';
 
 @Controller('registry')
 export class RegistryController {
-  constructor(private readonly registry: RegistryService) {}
+  constructor(
+    private readonly registry: RegistryService,
+    private readonly audit: AuditService,
+  ) {}
 
   @Post('approve')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OPERATOR')
-  approve(@Body() body: { wargaAccountId: string; attributes: string }) {
-    return this.registry.approveWarga(body.wargaAccountId, body.attributes);
+  async approve(@Req() req: any, @Body() body: { wargaAccountId: string; attributes: string }) {
+    const res = await this.registry.approveWarga(body.wargaAccountId, body.attributes);
+    await this.audit.record(req.user.accountId, 'REGISTRY_APPROVE', body.wargaAccountId, { leafIndex: res.leafIndex });
+    return res;
   }
 
   @Post('snapshot')
@@ -25,8 +31,10 @@ export class RegistryController {
   @Post('publish')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('KADES')
-  publish(@Req() req: any, @Body() body: { version: number; signature: string }) {
-    return this.registry.publishSignedRoot(req.user.accountId, body.version, body.signature);
+  async publish(@Req() req: any, @Body() body: { version: number; signature: string }) {
+    const res = await this.registry.publishSignedRoot(req.user.accountId, body.version, body.signature);
+    await this.audit.record(req.user.accountId, 'REGISTRY_PUBLISH', `v${body.version}`, { version: body.version });
+    return res;
   }
 
   @Get('proof')

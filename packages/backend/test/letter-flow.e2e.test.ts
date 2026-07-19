@@ -103,6 +103,15 @@ describe('Letter flow (e2e, needs Postgres)', () => {
     expect(v.body.valid).toBe(true);
     expect(v.body.signer).toBe('H. Asep Saepudin');
     expect(v.body.letterNumber).toBe(signed.body.letterNumber);
+
+    // Sensitive actions land in the tamper-evident audit chain.
+    const audit = await request(app.getHttpServer()).get('/audit/verify').set('Authorization', `Bearer ${kaToken}`).expect(200);
+    expect(audit.body.valid).toBe(true);
+    expect(audit.body.count).toBeGreaterThan(0);
+    const list = await request(app.getHttpServer()).get('/audit').set('Authorization', `Bearer ${kaToken}`).expect(200);
+    expect((list.body as any[]).some((e) => e.action === 'LETTER_SIGN' && e.target === id)).toBe(true);
+    // A warga cannot read the audit trail.
+    await request(app.getHttpServer()).get('/audit/verify').set('Authorization', `Bearer ${waToken}`).expect(403);
   });
 
   it('rejects a letter request with no eligibility proof', async () => {

@@ -1,8 +1,11 @@
 import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
+// Tighter limit than the global default: sign-in is a brute-force target.
+@Throttle({ default: { ttl: 60_000, limit: 15 } })
 export class AuthController {
   constructor(private readonly auth: AuthService, private readonly jwt: JwtService) {}
 
