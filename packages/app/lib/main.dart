@@ -6,14 +6,21 @@ import 'crypto/android_keystore.dart';
 import 'crypto/ecdsa.dart';
 import 'state/session.dart';
 import 'state/session_scope.dart';
+import 'state/device_identity.dart';
 import 'screens/login_screen.dart';
+import 'screens/enroll_screen.dart';
 import 'screens/main_shell.dart';
 import 'screens/operator_shell.dart';
 import 'screens/kades_shell.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(SidesaApp(session: await _buildSession()));
+  const store = SecureDeviceIdentityStore();
+  runApp(SidesaApp(
+    session: await _buildSession(),
+    store: store,
+    identity: await _resolveIdentity(store),
+  ));
 }
 
 /// Prefer the hardware-backed, biometric-gated key when requested and available;
@@ -28,9 +35,20 @@ Future<Session> _buildSession() async {
   return Session();
 }
 
+/// A dart-define account still wins, so the development runbook keeps working;
+/// otherwise use whatever this device was enrolled as.
+Future<DeviceIdentity?> _resolveIdentity(DeviceIdentityStore store) async {
+  if (AppConfig.devAccountId.isNotEmpty) {
+    return DeviceIdentity(accountId: AppConfig.devAccountId, role: 'WARGA', displayName: '');
+  }
+  return store.load();
+}
+
 class SidesaApp extends StatelessWidget {
   final Session session;
-  const SidesaApp({super.key, required this.session});
+  final DeviceIdentityStore store;
+  final DeviceIdentity? identity;
+  const SidesaApp({super.key, required this.session, required this.store, this.identity});
 
   @override
   Widget build(BuildContext context) {
@@ -40,28 +58,42 @@ class SidesaApp extends StatelessWidget {
         title: 'SIDESA-CM',
         debugShowCheckedModeBanner: false,
         theme: sidesaTheme(),
-        home: const RootGate(),
+        home: RootGate(store: store, identity: identity),
       ),
     );
   }
 }
 
-/// Toggles between login and the main app; owns login/logout state.
+/// Walks the device through enrolment -> login -> the shell for its role.
 class RootGate extends StatefulWidget {
-  const RootGate({super.key});
+  final DeviceIdentityStore store;
+  final DeviceIdentity? identity;
+  const RootGate({super.key, required this.store, this.identity});
   @override
   State<RootGate> createState() => _RootGateState();
 }
 
 class _RootGateState extends State<RootGate> {
+  DeviceIdentity? _identity;
   bool _loggedIn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _identity = widget.identity;
+  }
+
+  Future<void> _onEnrolled(DeviceIdentity identity) async {
+    await widget.store.save(identity);
+    if (mounted) setState(() => _identity = identity);
+  }
 
   Future<void> _login() async {
     final session = SessionScope.of(context);
-    // Real login when a dev account is configured; otherwise demo mode.
-    if (AppConfig.devAccountId.isNotEmpty) {
+    final accountId = _identity?.accountId ?? '';
+    if (accountId.isNotEmpty) {
       try {
-        await session.login(AppConfig.devAccountId);
+        await session.login(accountId);
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -80,6 +112,8 @@ class _RootGateState extends State<RootGate> {
 
   @override
   Widget build(BuildContext context) {
+    // Not enrolled yet -> the device must be claimed with an operator's code.
+    if (_identity == null) return EnrollScreen(onEnrolled: _onEnrolled);
     if (!_loggedIn) return LoginScreen(onLogin: _login);
     // Each role lands on its own home: operator queue, Kepala Desa signing, or warga shell.
     final session = SessionScope.of(context);

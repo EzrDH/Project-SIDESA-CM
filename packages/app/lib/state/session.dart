@@ -5,6 +5,7 @@ import '../auth/auth_service.dart';
 import '../crypto/ecdsa.dart';
 import '../crypto/keystore.dart';
 import '../app_config.dart';
+import 'device_identity.dart';
 
 /// Single source of truth for the signed-in warga: device key, API client,
 /// auth, and the session token. Screens go through this.
@@ -39,6 +40,27 @@ class Session {
 
   bool get isOperator => role == 'OPERATOR';
   bool get isKades => role == 'KADES';
+
+  /// Claim a one-time enrolment code issued by an operator, binding this
+  /// device's key to the identity the operator verified from the resident's KTP.
+  /// Signing the (code, publicKey) pair proves we hold the private key, so a
+  /// stolen code cannot be used to enrol somebody else's key.
+  Future<DeviceIdentity> daftarPerangkat(String code) async {
+    final normalized = code.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+    final pubHex = bytesToHex(await keyStore.publicKey());
+    final message = utf8.encode('SIDESA-enroll-v1|$normalized|$pubHex');
+    final signature = await keyStore.sign(Uint8List.fromList(message));
+    final res = await api.postJson('/enroll/claim', {
+      'code': normalized,
+      'publicKey': pubHex,
+      'signature': bytesToHex(signature),
+    });
+    return DeviceIdentity(
+      accountId: res['accountId'] as String,
+      role: (res['role'] as String?) ?? 'WARGA',
+      displayName: (res['displayName'] as String?) ?? '',
+    );
+  }
 
   void logout() {
     token = null;
