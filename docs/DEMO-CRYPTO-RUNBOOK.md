@@ -1,6 +1,9 @@
 # Runbook Demo — Sisi Kriptografi SIDESA-CM
 **Untuk mata kuliah: Implementasi Kriptografi.** Durasi target: ~7 menit + Q&A.
 
+> Untuk **menjalankan & mencoba aplikasi per peran** (Warga / Operator / Kepala Desa),
+> lihat [RUNBOOK-UJI-PERAN.md](RUNBOOK-UJI-PERAN.md).
+
 Pesan inti yang ingin ditanamkan ke penilai:
 1. Algoritma **patuh Kepka BSSN No. 443 Tahun 2025** (ECDSA **P-384**, **SHA-384**).
 2. Protokol tingkat-atas (Merkle, Schnorr+Fiat-Shamir, bukti kelayakan) **diimplementasikan sendiri**; primitif dari pustaka **teraudit** (`@noble/curves`).
