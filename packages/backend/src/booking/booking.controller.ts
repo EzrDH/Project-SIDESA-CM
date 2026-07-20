@@ -3,6 +3,7 @@ import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../rbac/roles.guard';
 import { Roles } from '../rbac/roles.decorator';
 import { BookingService } from './booking.service';
+import { CreateBookingDto, ConfirmBookingDto, CheckinDto } from './booking.dto';
 
 @Controller('bookings')
 export class BookingController {
@@ -11,7 +12,7 @@ export class BookingController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('WARGA')
-  create(@Req() req: any, @Body() body: { purpose: string; requestedSlot: string }) {
+  create(@Req() req: any, @Body() body: CreateBookingDto) {
     return this.bookings.create(req.user.accountId, body.purpose, body.requestedSlot);
   }
 
@@ -32,7 +33,7 @@ export class BookingController {
   @Post(':id/confirm')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('KADES')
-  confirm(@Param('id') id: string, @Body() body: { slot?: string }) {
+  confirm(@Param('id') id: string, @Body() body: ConfirmBookingDto) {
     return this.bookings.confirm(id, body?.slot);
   }
 
@@ -46,7 +47,7 @@ export class BookingController {
   @Post('checkin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('OPERATOR')
-  checkin(@Body() body: { token: string }) {
+  checkin(@Body() body: CheckinDto) {
     return this.bookings.checkin(body.token);
   }
 }

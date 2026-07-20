@@ -116,9 +116,18 @@ describe('Letter flow (e2e, needs Postgres)', () => {
 
   it('rejects a letter request with no eligibility proof', async () => {
     const waToken = await login(app, warga, waId);
+    // Input validation rejects the missing proof before the handler runs (400);
+    // an invalid/replayed proof is rejected by the crypto gate itself (403).
     await request(app.getHttpServer()).post('/letters/request')
       .set('Authorization', `Bearer ${waToken}`)
-      .send({ type: 'SKTM', formData: { nama: 'Budi' } }).expect(403);
+      .send({ type: 'SKTM', formData: { nama: 'Budi' } }).expect(400);
+  });
+
+  it('rejects a letter request with an unknown letter type', async () => {
+    const waToken = await login(app, warga, waId);
+    await request(app.getHttpServer()).post('/letters/request')
+      .set('Authorization', `Bearer ${waToken}`)
+      .send({ type: 'SURAT_PALSU', formData: {}, eligibility: { proof: {}, nonce: 'x' } }).expect(400);
   });
 
   it('rejects a replayed eligibility nonce', async () => {

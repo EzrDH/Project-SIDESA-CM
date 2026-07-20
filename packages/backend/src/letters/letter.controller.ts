@@ -3,9 +3,9 @@ import { JwtAuthGuard } from '../auth/jwt.guard';
 import { RolesGuard } from '../rbac/roles.guard';
 import { Roles } from '../rbac/roles.decorator';
 import { LetterService } from './letter.service';
-import { LetterType } from './letter.template';
-import { EligibilityService, EligibilityProofDto } from '../registry/eligibility.service';
+import { EligibilityService } from '../registry/eligibility.service';
 import { AuditService } from '../audit/audit.service';
+import { RequestLetterDto, SignLetterDto } from './letter.dto';
 
 @Controller('letters')
 export class LetterController {
@@ -25,11 +25,8 @@ export class LetterController {
   @Post('request')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('WARGA')
-  async request(
-    @Req() req: any,
-    @Body() body: { type: LetterType; formData: Record<string, string>; eligibility: { proof: EligibilityProofDto; nonce: string } },
-  ) {
-    const el = body.eligibility;
+  async request(@Req() req: any, @Body() body: RequestLetterDto) {
+    const el = body.eligibility as { proof: any; nonce: string };
     const ok = el && (await this.eligibility.consumeAndVerify(req.user.accountId, body.type, el.proof, el.nonce));
     if (!ok) throw new ForbiddenException('Bukti kelayakan (ZKP) tidak valid atau kedaluwarsa.');
     return this.letters.createRequest(req.user.accountId, body.type, body.formData);
@@ -84,7 +81,7 @@ export class LetterController {
   @Post(':id/sign')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('KADES')
-  async sign(@Req() req: any, @Param('id') id: string, @Body() body: { signature: string }) {
+  async sign(@Req() req: any, @Param('id') id: string, @Body() body: SignLetterDto) {
     const res = await this.letters.sign(req.user.accountId, id, body.signature);
     await this.audit.record(req.user.accountId, 'LETTER_SIGN', id, {
       letterNumber: res.letterNumber,

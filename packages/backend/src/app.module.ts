@@ -1,5 +1,5 @@
-import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { Module, ValidationPipe } from '@nestjs/common';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { HealthController } from './health/health.controller';
 import { AuthModule } from './auth/auth.module';
@@ -23,6 +23,11 @@ import { AuditModule } from './audit/audit.module';
     AuditModule,
   ],
   controllers: [HealthController],
-  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    // Reject malformed bodies early and strip unknown properties. Endpoints whose
+    // body is typed as a DTO class are validated; the rest pass through unchanged.
+    { provide: APP_PIPE, useValue: new ValidationPipe({ whitelist: true, transform: true }) },
+  ],
 })
 export class AppModule {}
