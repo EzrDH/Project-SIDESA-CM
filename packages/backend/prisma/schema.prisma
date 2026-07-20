@@ -112,6 +112,22 @@ model AuthChallenge {
   createdAt DateTime @default(now())
 }
 
+/// One-time enrolment code issued by an operator AFTER verifying a resident's
+/// KTP in person. It carries the verified identity; the account itself is only
+/// created when a device claims the code with proof it holds the private key.
+/// Only the code's hash is stored, so a database leak cannot yield usable codes.
+model EnrollmentCode {
+  codeHash      String   @id
+  displayName   String
+  nikCommitment String
+  attributes    String
+  used          Boolean  @default(false)
+  expiresAt     DateTime
+  issuedBy      String
+  accountId     String?
+  createdAt     DateTime @default(now())
+}
+
 /// Single-use nonce that binds a ZKP eligibility proof to one letter request,
 /// so a captured proof cannot be replayed (even with a stolen session token).
 model EligibilityChallenge {

@@ -7,6 +7,7 @@ import { RegistryModule } from './registry/registry.module';
 import { LetterModule } from './letters/letter.module';
 import { BookingModule } from './booking/booking.module';
 import { AuditModule } from './audit/audit.module';
+import { EnrollModule } from './enroll/enroll.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AuditModule } from './audit/audit.module';
     LetterModule,
     BookingModule,
     AuditModule,
+    EnrollModule,
   ],
   controllers: [HealthController],
   providers: [
