@@ -18,8 +18,8 @@ export class NotificationsService {
     });
   }
 
-  async unregisterToken(token: string): Promise<void> {
-    await this.prisma.deviceToken.deleteMany({ where: { token } });
+  async unregisterToken(token: string, accountId: string): Promise<void> {
+    await this.prisma.deviceToken.deleteMany({ where: { token, accountId } });
   }
 
   // generic, PII-free copy per audience

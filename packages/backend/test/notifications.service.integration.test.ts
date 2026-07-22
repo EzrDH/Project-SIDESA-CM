@@ -16,10 +16,10 @@ describe('NotificationsService token registration (needs Postgres)', () => {
     let rows = await prisma.deviceToken.findMany({ where: { accountId: acc } });
     expect(rows).toHaveLength(1);
 
-    await svc.unregisterToken('tok-x');
+    await svc.unregisterToken('tok-x', acc);
     rows = await prisma.deviceToken.findMany({ where: { accountId: acc } });
     expect(rows).toHaveLength(0);
 
-    await svc.unregisterToken('tok-missing'); // no throw when absent
+    await svc.unregisterToken('tok-missing', acc); // no throw when absent
   });
 });

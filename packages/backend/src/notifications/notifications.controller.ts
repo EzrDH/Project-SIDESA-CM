@@ -18,8 +18,8 @@ export class NotificationsController {
 
   @Delete('token')
   @HttpCode(200)
-  async unregister(@Body() dto: UnregisterTokenDto) {
-    await this.notifications.unregisterToken(dto.token);
+  async unregister(@Req() req: any, @Body() dto: UnregisterTokenDto) {
+    await this.notifications.unregisterToken(dto.token, req.user.accountId);
     return { ok: true };
   }
 }
