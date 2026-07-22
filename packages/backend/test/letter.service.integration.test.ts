@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { generateKeyPair, signMessage } from '@sidesa/crypto';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { LetterService } from '../src/letters/letter.service';
@@ -8,7 +9,7 @@ const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '
 
 describe('LetterService (integration)', () => {
   const prisma = new PrismaService();
-  const svc = new LetterService(prisma);
+  const svc = new LetterService(prisma, new EventEmitter2());
   const kades = generateKeyPair();
   const kadesPk = hex(kades.publicKey);
   let kadesId = '';

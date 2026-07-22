@@ -1,6 +1,7 @@
 import { Module, ValidationPipe } from '@nestjs/common';
 import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { HealthController } from './health/health.controller';
 import { AuthModule } from './auth/auth.module';
 import { RegistryModule } from './registry/registry.module';
@@ -12,6 +13,10 @@ import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
+    // wildcard:true is required so @OnEvent('letter.*') / @OnEvent('booking.*') actually
+    // pattern-match against concrete event names like 'letter.rejected' (eventemitter2
+    // treats '*' as a literal character otherwise).
+    EventEmitterModule.forRoot({ wildcard: true }),
     // Basic per-IP rate limit (120 req/min) to blunt brute-force + abuse.
     // Inert under vitest so the test suite isn't throttled.
     ThrottlerModule.forRoot({

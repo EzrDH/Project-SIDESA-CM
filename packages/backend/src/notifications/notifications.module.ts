@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from './notifications.service';
 import { NotificationsController } from './notifications.controller';
+import { NotificationsListener } from './notifications.listener';
 import { NOTIFICATION_SENDER } from './notification-sender';
 import { LoggingNotificationSender } from './logging-notification-sender';
 
@@ -12,6 +13,7 @@ import { LoggingNotificationSender } from './logging-notification-sender';
   providers: [
     PrismaService,
     NotificationsService,
+    NotificationsListener,
     { provide: NOTIFICATION_SENDER, useClass: LoggingNotificationSender },
   ],
   exports: [NotificationsService],

@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { verifyMessage } from '@sidesa/crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { hexToBytes } from '../registry/registry.builder';
@@ -15,7 +16,10 @@ function randomToken(): string {
 
 @Injectable()
 export class LetterService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: EventEmitter2,
+  ) {}
 
   async createRequest(
     wargaAccountId: string,
@@ -25,6 +29,7 @@ export class LetterService {
     const r = await this.prisma.letterRequest.create({
       data: { wargaAccountId, type, formData: JSON.stringify(formData) },
     });
+    this.events.emit('letter.submitted', { type: 'letter.submitted', refId: r.id });
     return { id: r.id };
   }
 
@@ -72,6 +77,7 @@ export class LetterService {
       where: { id: requestId },
       data: { status: 'DRAFTED', draftContent: canonicalContent, draftNumber: letterNumber },
     });
+    this.events.emit('letter.drafted', { type: 'letter.drafted', refId: requestId, wargaAccountId: req.wargaAccountId });
     return { letterNumber, canonicalContent, documentHash: documentHashHex(canonicalContent) };
   }
 
@@ -111,11 +117,13 @@ export class LetterService {
       },
     });
     await this.prisma.letterRequest.update({ where: { id: requestId }, data: { status: 'SIGNED' } });
+    this.events.emit('letter.signed', { type: 'letter.signed', refId: requestId, wargaAccountId: req.wargaAccountId });
     return { letterNumber: req.draftNumber, qrToken };
   }
 
   async reject(requestId: string): Promise<{ status: string }> {
-    await this.prisma.letterRequest.update({ where: { id: requestId }, data: { status: 'REJECTED' } });
+    const req = await this.prisma.letterRequest.update({ where: { id: requestId }, data: { status: 'REJECTED' } });
+    this.events.emit('letter.rejected', { type: 'letter.rejected', refId: requestId, wargaAccountId: req.wargaAccountId });
     return { status: 'REJECTED' };
   }
 }

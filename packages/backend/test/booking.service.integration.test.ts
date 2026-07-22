@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { BookingService } from '../src/booking/booking.service';
 
 describe('BookingService (integration)', () => {
   const prisma = new PrismaService();
-  const svc = new BookingService(prisma);
+  const svc = new BookingService(prisma, new EventEmitter2());
   const slot = '2026-08-15T10:00:00.000Z';
 
   beforeAll(async () => { await prisma.$connect(); await prisma.booking.deleteMany({ where: { wargaAccountId: { in: ['bw-1', 'bw-2'] } } }); });

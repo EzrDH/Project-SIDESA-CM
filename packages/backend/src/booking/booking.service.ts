@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../prisma/prisma.service';
 
 function randomToken(): string {
@@ -9,13 +10,17 @@ function randomToken(): string {
 
 @Injectable()
 export class BookingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: EventEmitter2,
+  ) {}
 
   async create(wargaAccountId: string, purpose: string, requestedSlotIso: string) {
     const checkinToken = randomToken();
     const b = await this.prisma.booking.create({
       data: { wargaAccountId, purpose, requestedSlot: new Date(requestedSlotIso), checkinToken },
     });
+    this.events.emit('booking.requested', { type: 'booking.requested', refId: b.id });
     return { id: b.id, checkinToken };
   }
 
@@ -39,11 +44,13 @@ export class BookingService {
       where: { id: bookingId },
       data: { status: 'CONFIRMED', confirmedSlot: slot },
     });
+    this.events.emit('booking.confirmed', { type: 'booking.confirmed', refId: bookingId, wargaAccountId: updated.wargaAccountId });
     return { status: updated.status, confirmedSlot: updated.confirmedSlot! };
   }
 
   async cancel(bookingId: string) {
     const updated = await this.prisma.booking.update({ where: { id: bookingId }, data: { status: 'CANCELLED' } });
+    this.events.emit('booking.cancelled', { type: 'booking.cancelled', refId: bookingId, wargaAccountId: updated.wargaAccountId });
     return { status: updated.status };
   }
 
