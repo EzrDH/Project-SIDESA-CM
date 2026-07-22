@@ -5,6 +5,7 @@ import '../auth/auth_service.dart';
 import '../crypto/ecdsa.dart';
 import '../crypto/keystore.dart';
 import '../app_config.dart';
+import '../push/push_messaging_adapter.dart';
 import 'device_identity.dart';
 
 /// Single source of truth for the signed-in warga: device key, API client,
@@ -12,18 +13,25 @@ import 'device_identity.dart';
 class Session {
   final ApiClient api;
   final KeyStore keyStore;
+  final PushMessagingAdapter push;
   late final AuthService _auth;
 
   String? token;
   String? accountId;
   String? role;
+  String? _pushToken;
 
-  Session({ApiClient? api, KeyStore? keyStore})
+  /// Fire-and-forget push (un)registration work; tests await this to observe
+  /// the logout unregister call without racing it.
+  Future<void> pendingPushWork = Future.value();
+
+  Session({ApiClient? api, KeyStore? keyStore, PushMessagingAdapter? push})
       : api = api ?? ApiClient(AppConfig.baseUrl),
         keyStore = keyStore ??
             InMemoryKeyStore(AppConfig.devPrivKey.isNotEmpty
                 ? hexToBytes(AppConfig.devPrivKey)
-                : generateKeyPair().privateKey) {
+                : generateKeyPair().privateKey),
+        push = push ?? NoopPushAdapter() {
     _auth = AuthService(this.api, this.keyStore);
   }
 
@@ -36,7 +44,21 @@ class Session {
     role = res.role;
     api.authToken = token;
     this.accountId = accountId;
+
+    final t = await push.obtainToken();
+    if (t != null) {
+      _pushToken = t;
+      push.onTokenRefresh((nt) {
+        _pushToken = nt;
+        api.postJson('/notifications/token', {'token': nt, 'platform': _platform()});
+      });
+      await api.postJson('/notifications/token', {'token': t, 'platform': _platform()});
+    }
   }
+
+  /// The only push target supported today; iOS arrives with the deferred
+  /// Firebase wiring.
+  String _platform() => 'android';
 
   bool get isOperator => role == 'OPERATOR';
   bool get isKades => role == 'KADES';
@@ -63,6 +85,13 @@ class Session {
   }
 
   void logout() {
+    // The unregister DELETE needs the bearer token, so fire it (capturing the
+    // Future) before clearing api.authToken and the rest of the session.
+    final t = _pushToken;
+    if (t != null) {
+      pendingPushWork = api.deleteJson('/notifications/token', {'token': t}).catchError((_) => <String, dynamic>{});
+      _pushToken = null;
+    }
     token = null;
     accountId = null;
     role = null;

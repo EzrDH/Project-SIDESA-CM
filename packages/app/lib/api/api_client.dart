@@ -30,4 +30,12 @@ class ApiClient {
     }
     return jsonDecode(res.body);
   }
+
+  Future<Map<String, dynamic>> deleteJson(String path, Map<String, dynamic> body) async {
+    final res = await _client.delete(Uri.parse('$baseUrl$path'), headers: _headers(), body: jsonEncode(body));
+    if (res.statusCode >= 400) {
+      throw Exception('Request $path gagal (${res.statusCode}).');
+    }
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
 }
