@@ -8,6 +8,7 @@ import { LetterModule } from './letters/letter.module';
 import { BookingModule } from './booking/booking.module';
 import { AuditModule } from './audit/audit.module';
 import { EnrollModule } from './enroll/enroll.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { EnrollModule } from './enroll/enroll.module';
     BookingModule,
     AuditModule,
     EnrollModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
   providers: [
