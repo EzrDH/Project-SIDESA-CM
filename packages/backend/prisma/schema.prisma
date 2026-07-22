@@ -140,6 +140,17 @@ model EligibilityChallenge {
   createdAt DateTime @default(now())
 }
 
+model DeviceToken {
+  id        String   @id @default(uuid())
+  accountId String
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([accountId])
+}
+
 model AuditLog {
   id          String   @id @default(uuid())
   seq         Int      @default(autoincrement())
