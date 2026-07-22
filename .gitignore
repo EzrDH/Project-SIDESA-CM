@@ -9,3 +9,7 @@ build/
 
 # MS Office lock/temp files
 ~$*
+
+# Firebase / FCM secrets
+**/google-services.json
+**/service-account*.json
