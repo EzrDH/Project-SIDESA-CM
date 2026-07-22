@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import '../api/api_client.dart';
 import '../auth/auth_service.dart';
 import '../crypto/ecdsa.dart';
@@ -45,14 +46,20 @@ class Session {
     api.authToken = token;
     this.accountId = accountId;
 
-    final t = await push.obtainToken();
-    if (t != null) {
-      _pushToken = t;
-      push.onTokenRefresh((nt) {
-        _pushToken = nt;
-        api.postJson('/notifications/token', {'token': nt, 'platform': _platform()});
-      });
-      await api.postJson('/notifications/token', {'token': t, 'platform': _platform()});
+    // Push registration is best-effort: a failure here (no Firebase, backend
+    // hiccup, ...) must never surface as a login failure.
+    try {
+      final t = await push.obtainToken();
+      if (t != null) {
+        _pushToken = t;
+        push.onTokenRefresh((nt) {
+          _pushToken = nt;
+          api.postJson('/notifications/token', {'token': nt, 'platform': _platform()}).catchError((_) => <String, dynamic>{});
+        });
+        await api.postJson('/notifications/token', {'token': t, 'platform': _platform()});
+      }
+    } catch (err) {
+      debugPrint('push token registration failed: $err');
     }
   }
 

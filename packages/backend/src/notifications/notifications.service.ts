@@ -25,7 +25,10 @@ export class NotificationsService {
   // generic, PII-free copy per audience
   private message(event: DomainEvent): NotificationMessage {
     const forOfficer = event.type === 'letter.submitted' || event.type === 'booking.requested';
-    const body = forOfficer ? 'Ada permohonan baru menunggu.' : 'Ada pembaruan pada permohonan Anda.';
+    let body: string;
+    if (event.type === 'letter.drafted') body = 'Ada pembaruan pada permohonan surat.';
+    else if (forOfficer) body = 'Ada permohonan baru menunggu.';
+    else body = 'Ada pembaruan pada permohonan Anda.';
     return { title: 'SIDESA-CM', body, data: { type: event.type, refId: event.refId, ts: Date.now().toString() } };
   }
 

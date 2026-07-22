@@ -62,4 +62,24 @@ void main() {
     await session.login('acc-1');
     expect(requests.contains('/notifications/token'), isFalse);
   });
+
+  test('a failed token registration does not break login (best-effort)', () async {
+    final requests = <String>[];
+    final mock = MockClient((req) async {
+      requests.add('${req.method} ${req.url.path}');
+      if (req.url.path == '/auth/challenge') return http.Response(jsonEncode({'nonce': 'n1'}), 201);
+      if (req.url.path == '/auth/verify') return http.Response(jsonEncode({'token': 'jwt', 'role': 'WARGA'}), 201);
+      if (req.url.path == '/notifications/token') return http.Response('server error', 500);
+      return http.Response('nf', 404);
+    });
+    final kp = generateKeyPair();
+    final session = Session(
+      api: ApiClient('http://test', client: mock),
+      keyStore: InMemoryKeyStore(kp.privateKey),
+      push: FakePushAdapter('fcm-abc'),
+    );
+    await session.login('acc-1'); // must not throw despite the 500
+    expect(session.isLoggedIn, isTrue);
+    expect(requests, contains('POST /notifications/token'));
+  });
 }
