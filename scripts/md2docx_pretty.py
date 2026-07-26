@@ -200,6 +200,9 @@ def main():
     doc = Document()
     style_doc(doc)
     seen_heading = False
+    # A document that writes its own "Daftar Isi" section gets no auto TOC field
+    # (a field renders blank until the reader runs Update Field in Word).
+    has_manual_toc = bool(re.search(r"^##+ Daftar Isi\s*$", raw, re.M))
 
     for block in blocks(lines):
         first = block[0].strip()
@@ -247,10 +250,11 @@ def main():
                 kr.bold = True; kr.font.color.rgb = BLUE
                 cells[1].text = ""; add_inline(cells[1].paragraphs[0], val.strip())
             doc.add_paragraph()
-            # TOC after the metadata/cover, on its own page
-            hp = doc.add_paragraph(); hr = hp.add_run("Daftar Isi")
-            hr.bold = True; hr.font.size = Pt(13); hr.font.color.rgb = NAVY
-            add_toc(doc)
+            # TOC after the metadata/cover — skipped when the source supplies its own.
+            if not has_manual_toc:
+                hp = doc.add_paragraph(); hr = hp.add_run("Daftar Isi")
+                hr.bold = True; hr.font.size = Pt(13); hr.font.color.rgb = NAVY
+                add_toc(doc)
             continue
 
         # ordinary list?
