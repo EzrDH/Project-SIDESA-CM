@@ -41,4 +41,14 @@ class AndroidKeyStore implements KeyStore {
     });
     return hexToBytes(hex!);
   }
+
+  @override
+  Future<Uint8List> prove(Uint8List context) async {
+    // Schnorr computes s = k + e*x and therefore needs the private scalar.
+    // Android Keystore never releases it — only signing is exposed. Devices
+    // enrolled against hardware keys must re-enrol with the software store.
+    throw UnsupportedError(
+      'Kunci berbasis perangkat keras tidak dapat membuat bukti Schnorr; daftarkan ulang perangkat.',
+    );
+  }
 }
