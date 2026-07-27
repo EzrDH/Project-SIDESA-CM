@@ -139,8 +139,10 @@ berikutnya, menandai dilayani, atau menandai tidak hadir bila warga tidak muncul
 | Autentikasi | Pembuktian kepemilikan kunci tanpa kata sandi dan tanpa NIK; nonce sekali pakai berlaku 5 menit; bukti dari kunci lain ditolak; akun tidak aktif ditolak; token sesi berlaku 30 menit; dibatasi 15 permintaan per menit |
 | Registri penduduk | Registri berupa pohon Merkle; daun dibentuk dari kunci publik dan atribut; perubahan diajukan operator dan memerlukan persetujuan; versi akar tersimpan; warga dapat mengambil jalur keanggotaannya; seluruh perubahan tercatat pada audit |
 | Verifikasi kelayakan | Pemesanan hanya setelah bukti terverifikasi; bukti memuat keanggotaan registri dan penguasaan kunci; terikat konteks berisi akun, jenis layanan, dan nonce; NIK tidak pernah ikut; bukan-anggota, peniru, atribut yang diubah, dan bukti yang dikirim ulang ditolak |
-| Layanan, slot, dan kuota | Jenis layanan beserta perkiraan durasi; jam layanan dan hari libur; kuota harian; pemesanan di luar kuota atau jam layanan ditolak; slot bentrok ditolak; perubahan jadwal memicu pemberitahuan |
-| Pemesanan dan antrean | Nomor antrean unik per tanggal dan jenis layanan; penerbitan berurutan dan bebas nomor ganda; warga dapat membatalkan sebelum dipanggil; jumlah tiket aktif per warga dibatasi |
+| Slot waktu dan ketersediaan | Jam layanan dan panjang slot ditetapkan operator; sistem membangkitkan slot yang dapat dipesan; slot dapat ditutup karena kegiatan insidental; satu slot hanya untuk satu janji temu; penutupan slot memicu usulan slot pengganti beserta pemberitahuan |
+| Pemesanan janji temu | Warga memilih tanggal dan slot waktu; nomor urut harian terbit berurutan dan bebas nomor ganda; warga dapat membatalkan sebelum dipanggil sehingga slot kembali tersedia |
+| Warga datang langsung | Dilayani sepanjang masih ada slot kosong; slot yang telah diklaim melalui aplikasi tidak dapat diambil alih, sehingga pemesan aplikasi terprioritaskan secara struktural |
+| Penampil publik di kantor | Halaman baca-saja tanpa autentikasi menampilkan nomor yang sedang dilayani dan nomor berikutnya; tidak menampilkan nama, NIK, maupun keperluan |
 | Papan antrean operator | Daftar tiket hari berjalan; panggil berikutnya; tandai dilayani, tidak hadir, atau lewati; panggil ulang; setiap transisi tercatat beserta pelaku dan waktu |
 | Status dan notifikasi | Nomor berjalan, posisi giliran, dan estimasi tunggu; notifikasi giliran mendekat dan perubahan jadwal; muatan generik tanpa data pribadi; token perangkat didaftarkan saat masuk dan dicabut saat keluar; kegagalan notifikasi tidak menggagalkan transaksi |
 | Check-in dan riwayat | Penandaan kehadiran hanya untuk tiket terkonfirmasi; riwayat tiket bagi warga; rekapitulasi per jenis layanan dan periode bagi operator |
@@ -274,11 +276,12 @@ dan kuota; tiket antrean; token perangkat untuk notifikasi; serta entri audit be
 
 | Status | Makna | Transisi sah |
 |---|---|---|
-| `WAITING` | Tiket terbit dan menunggu giliran | ke `CALLED` oleh operator; ke `CANCELLED` |
+| `BOOKED` | Slot diklaim dan menunggu giliran | ke `CALLED` oleh operator; ke `CANCELLED`; ke `RESCHEDULE_SUGGESTED` bila slot ditutup |
 | `CALLED` | Nomor sedang dipanggil | ke `SERVED` atau `NO_SHOW` |
 | `SERVED` | Warga telah dilayani | status akhir |
 | `NO_SHOW` | Warga tidak hadir saat dipanggil | ke `CALLED` bila dipanggil ulang |
-| `CANCELLED` | Pemesanan dibatalkan | status akhir |
+| `CANCELLED` | Pemesanan dibatalkan; slot kembali tersedia | status akhir |
+| `RESCHEDULE_SUGGESTED` | Slot ditutup, warga menerima usulan slot pengganti | ke `BOOKED` bila diterima; ke `CANCELLED` bila ditolak |
 
 Setiap transisi dicatat beserta waktu dan pelakunya, dan hanya dapat dilakukan peran yang berwenang.
 Perubahan skema basis data dijalankan non-interaktif melalui berkas SQL bernomor waktu yang tersimpan
@@ -361,14 +364,16 @@ diperlakukan sebagai indikasi kesalahan yang harus ditelusuri sampai akarnya.
 
 Karena aplikasi tidak memproduksi tanda tangan elektronik, kepatuhan algoritma diposisikan pada
 konstruksi kriptografis yang dipakai, yakni bukti-pengetahuan dan akumulator keanggotaan di atas kurva
-P-384 dengan fungsi hash SHA-384. Posisi ini perlu dikonfirmasi kepada pembimbing (Risiko R-1).
+P-384 dengan fungsi hash SHA-384. Posisi ini telah dikonfirmasi: Kepka 443 dipakai sebagai dasar
+pemilihan algoritma, sedangkan klaim kekuatan hukum tanda tangan elektronik dihapus karena aplikasi
+tidak memproduksinya.
 
 ## 13. Risiko dan Mitigasi
 
 | ID | Risiko | Mitigasi |
 |---|---|---|
-| R-1 | Posisi kepatuhan algoritma pada sistem tanpa tanda tangan dinilai belum jelas | Dokumentasikan konstruksi beserta parameternya; konfirmasikan kepada pembimbing |
-| R-2 | Kunci identitas tidak terisolasi pada elemen aman perangkat keras | Model ancaman terbatas pada gangguan pemesanan; kunci pada penyimpanan aman sistem; sediakan jalur pencabutan dan pendaftaran ulang |
+| R-1 | Posisi kepatuhan algoritma pada sistem tanpa tanda tangan dinilai belum jelas | **Selesai.** Kepka 443 dipakai sebagai dasar pemilihan algoritma; klaim kekuatan hukum tanda tangan dihapus |
+| R-2 | Kunci identitas tidak terisolasi pada elemen aman perangkat keras | **Diterima** sebagai konsekuensi melekat pemilihan Schnorr; model ancaman terbatas pada gangguan pemesanan; tersedia jalur pencabutan dan pendaftaran ulang |
 | R-3 | Pemesanan dari akun sama dapat ditautkan | Konsisten dengan pilihan rancangan; kredensial anonim sebagai pekerjaan lanjutan |
 | R-4 | Literasi digital warga rendah sehingga adopsi lambat | Antarmuka sederhana; pendampingan operator; pelatihan lapangan |
 | R-5 | Ketergantungan pada penyedia notifikasi pihak ketiga | Muatan minimal; kegagalan notifikasi tidak menggagalkan layanan |

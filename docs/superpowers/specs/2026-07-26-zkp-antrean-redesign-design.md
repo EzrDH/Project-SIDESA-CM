@@ -3,7 +3,7 @@
 - **Tanggal:** 2026-07-26
 - **Status:** Disetujui pada tahap gambaran; menunggu tinjauan spec (dan validasi ke dosen pembimbing)
 - **Pemicu:** Masukan dosen pembimbing agar implementasi kriptografi difokuskan pada *zero-knowledge proof* (ZKP) dan tidak lagi menerapkan tanda tangan digital ECDSA.
-- **Sifat perubahan:** Perubahan konsep produk yang besar, bukan penambahan fitur. Fitur penerbitan/penandatanganan surat digital dihapus; aplikasi menjadi layanan janji temu dan nomor antrean.
+- **Sifat perubahan:** Perubahan konsep produk yang besar, bukan penambahan fitur. Fitur penerbitan/penandatanganan surat digital dihapus; aplikasi menjadi layanan janji temu berbasis slot waktu beserta tampilan status pelayanan.
 
 ## 1. Latar dan Motivasi
 
@@ -27,6 +27,27 @@ skalar privat. Karena kini tidak ada penandatanganan dokumen sama sekali, kebutu
 perangkat keras hilang, sehingga **kendala yang dahulu memaksa migrasi ke ECDSA lenyap** dan ZKP Schnorr
 sejati kembali layak diterapkan. Penghapusan fitur tanda tangan justru membuka kembali ruang desain
 kriptografis.
+
+## 1.2 Keputusan yang sudah ditetapkan (27 Juli 2026)
+
+Keputusan berikut menggantikan asumsi yang sebelumnya dipakai dalam dokumen ini. Sumbernya adalah
+arahan pembimbing (R-1, R-2) dan jawaban perangkat desa atas empat butir penentu pada kuesioner
+kebutuhan.
+
+| Butir | Keputusan | Konsekuensi rancangan |
+|---|---|---|
+| R-1 Kepatuhan algoritma | Kepka 443 tetap dipakai sebagai dasar **pemilihan algoritma**, bukan sebagai klaim tanda tangan elektronik teregulasi | P-384 dan SHA-384 dipertahankan; klaim "tanda tangan bernilai hukum" dihapus dari seluruh dokumen |
+| R-2 Penyimpanan kunci | Diterima sebagai konsekuensi yang melekat pada pemilihan Schnorr | Kunci identitas berada pada penyimpanan aman perangkat lunak; dinyatakan terbuka sebagai keterbatasan |
+| Model antrean | **Slot waktu**: warga memilih jam tertentu, misalnya 09.30 | Model data berbasis slot, bukan nomor antrean harian semata; layar pemesanan menampilkan jam yang tersedia |
+| Ketersediaan Kepala Desa | Tidak diperlakukan sebagai komitmen kaku. Bila ada kegiatan insidental, prioritas menyesuaikan dan warga terdampak **diusulkan pindah ke jam lain** | Diperlukan fitur penjadwalan ulang dengan usulan slot alternatif, beserta pemberitahuannya |
+| Warga datang langsung | Tetap dilayani **asalkan ada slot kosong**; pemesan melalui aplikasi **diprioritaskan** | Walk-in mengisi slot yang belum diklaim; tidak ada penyisipan yang menggeser pemesan aplikasi |
+| Jenis layanan tahap awal | Satu jenis saja, yaitu **janji temu**, ditambah **tampilan status pelayanan secara langsung** yang dipasang di kantor desa | Entitas jenis layanan disederhanakan; ditambahkan layar penampil publik "sedang dilayani nomor berapa" |
+
+Dua akibat penting perlu dicatat. Pertama, model slot waktu menyederhanakan penanganan warga yang
+datang langsung: karena setiap slot dapat diklaim, walk-in cukup mengisi slot yang kosong tanpa perlu
+aturan penyisipan yang rumit. Kedua, tampilan status di kantor semula ditandai berada di luar cakupan;
+dengan keputusan ini ia menjadi bagian dari lingkup dan dirancang sebagai halaman baca-saja tanpa
+autentikasi.
 
 ## 2. Ruang Lingkup
 
@@ -136,22 +157,33 @@ resmi. Trade-off ini wajar tetapi wajib dilaporkan sebagai keterbatasan.
 ### 5.1 Warga
 - **Kelayakan sekali-set**: setelah enrolment, perangkat menyimpan $x$ dan atribut untuk membentuk bukti
   kelayakan saat memesan.
-- **Pesan janji temu / ambil antrean**: pilih jenis layanan (mis. konsultasi, pengaduan, keperluan yang
-  perlu tatap muka Kepala Desa) dan tanggal/slot; sistem menerbitkan **nomor antrean** setelah gerbang
-  kelayakan lolos.
-- **Status antrean real-time**: nomor yang sedang dilayani, posisi giliran, estimasi waktu tunggu.
+- **Pesan janji temu**: pilih tanggal dan **slot waktu** yang tersedia (mis. 09.30); sistem menerbitkan
+  tiket beserta nomor urut harian setelah gerbang kelayakan lolos.
+- **Status pelayanan secara langsung**: nomor yang sedang dilayani, posisi giliran, estimasi waktu
+  tunggu.
+- **Usulan penjadwalan ulang**: bila slot terdampak kegiatan insidental Kepala Desa, warga menerima
+  usulan slot alternatif beserta pemberitahuannya.
 - **Notifikasi** (memakai kembali infrastruktur FCM yang telah dibangun): "giliran Anda sebentar lagi",
   konfirmasi/pembatalan jadwal.
 - **Check-in** saat tiba di kantor desa.
 - **Riwayat** kunjungan dan janji temu.
 
 ### 5.2 Operator
-- Kelola slot dan kuota harian per jenis layanan.
+- Kelola slot dan kuota harian, termasuk menutup slot yang terdampak kegiatan insidental dan
+  mengusulkan slot pengganti kepada warga terdampak.
+- Menerima warga yang datang langsung ke dalam slot yang masih kosong, tanpa menggeser pemesan
+  aplikasi.
 - Papan antrean: panggil berikutnya, tandai **dilayani / tidak hadir**, lewati.
 - Terbitkan kode enrolment setelah verifikasi kartu identitas.
 - Kelola registri penduduk (tambah/cabut daun) dengan pencatatan audit.
 
-### 5.3 Kepala Desa
+### 5.3 Penampil Publik di Kantor Desa
+Halaman baca-saja tanpa autentikasi yang ditayangkan pada layar di ruang tunggu, menampilkan nomor yang
+sedang dilayani, slot yang sedang berjalan, dan daftar nomor berikutnya. Halaman ini tidak menampilkan
+nama maupun keperluan warga, hanya nomor dan waktu, sehingga tidak menambah pengungkapan data pribadi
+di ruang publik.
+
+### 5.4 Kepala Desa
 - Melihat agenda pertemuan harian dan ringkasan antrean. Tidak memegang kunci privat dan tidak
   menandatangani apa pun di aplikasi.
 
@@ -164,10 +196,19 @@ resmi. Trade-off ini wajar tetapi wajib dilaporkan sebagai keterbatasan.
 `nikCommitment`, `attributes`, `leafIndex`), `AuthChallenge`, `EligibilityChallenge`, `EnrollmentCode`,
 `RegistryVersion` (kolom tanda tangan akar menjadi tidak terpakai), `AuditLog`, `DeviceToken` (FCM).
 
-**Diubah/diperluas:** model antrean. `Booking` diperluas atau digantikan `QueueTicket` dengan medan:
-jenis layanan, tanggal, **nomor antrean harian**, status (`WAITING` → `CALLED` → `SERVED` / `NO_SHOW` /
-`CANCELLED`), token check-in, dan stempel waktu transisi. Ditambah konfigurasi `ServiceType` dan kuota
-slot harian.
+**Diubah/diperluas:** model antrean berbasis slot. `Booking` diperluas atau digantikan `Appointment`
+dengan medan: tanggal, **slot waktu** yang diklaim, nomor urut harian, asal pemesanan
+(`APP` atau `WALK_IN`), status (`BOOKED` → `CALLED` → `SERVED` / `NO_SHOW` / `CANCELLED` /
+`RESCHEDULE_SUGGESTED`), token check-in, dan stempel waktu transisi. Ditambah entitas `Slot` yang
+merepresentasikan satu satuan waktu layanan pada satu tanggal beserta penanda tersedia, diklaim, atau
+ditutup.
+
+Slot menjadi satuan penjadwalan sekaligus satuan kuota, sehingga tidak diperlukan kuota harian
+terpisah. Walk-in direkam sebagai `Appointment` dengan asal `WALK_IN` yang mengklaim slot kosong,
+sehingga prioritas pemesan aplikasi terjaga secara struktural: slot yang telah diklaim melalui aplikasi
+tidak dapat diambil alih. Penutupan slot karena kegiatan insidental Kepala Desa menandai slot sebagai
+ditutup dan memindahkan janji temu terdampak ke status `RESCHEDULE_SUGGESTED` beserta usulan slot
+pengganti.
 
 **Migrasi Prisma** mengikuti aturan non-interaktif proyek (`migrate diff --script` → folder migrasi baru
 → `migrate deploy` → `generate`), termasuk migrasi penghapusan tabel surat.
@@ -197,14 +238,14 @@ slot harian.
 - **Audit**: aksi sensitif (terbit/klaim kode, ubah registri, kelola antrean) dicatat pada log audit
   berantai-hash.
 
-## 9. Kepatuhan (perlu validasi ke dosen/BSSN)
+## 9. Kepatuhan
 
 Keputusan Kepala BSSN Nomor 443 Tahun 2025 mengatur algoritma tanda tangan dan enkripsi. Karena aplikasi
 tidak lagi memproduksi tanda tangan teregulasi, narasi kepatuhan bergeser: **tidak ada tanda tangan
 teregulasi yang diproduksi aplikasi**; kelayakan memakai ZKP di atas grup kurva P-384 dan fungsi hash
-SHA-384; enkripsi data saat diam (bila ada) memakai AES-256. Pergeseran ini wajar, tetapi **harus
-dikonfirmasi** kepada dosen pembimbing agar tidak dianggap keluar dari kerangka kepatuhan yang selama ini
-menjadi identitas proyek.
+SHA-384; enkripsi data saat diam (bila ada) memakai AES-256. Pergeseran ini telah dikonfirmasi: Kepka 443 tetap dipakai
+sebagai dasar pemilihan algoritma, sedangkan klaim mengenai kekuatan hukum tanda tangan elektronik
+dihapus karena aplikasi memang tidak lagi memproduksinya.
 
 ## 10. Strategi Pengujian
 
@@ -234,9 +275,14 @@ divalidasi ke dosen. Urutan yang disarankan: (1) hidupkan Schnorr lintas bahasa 
 migrasikan auth & enrolment ke Schnorr; (3) migrasikan kelayakan ke Schnorr; (4) hapus subsistem surat +
 kunci hardware; (5) bangun subsistem antrean; (6) sambungkan notifikasi antrean ke FCM.
 
-## 13. Pertanyaan Terbuka / Butuh Validasi
+## 13. Pertanyaan Terbuka
 
-- Konfirmasi kepatuhan Kepka 443 pada model tanpa tanda tangan (Bagian 9).
-- Apakah biometrik tetap dipertahankan sebagai kunci akses aplikasi meski bukan gerbang kripto.
-- Daftar jenis layanan (`ServiceType`) dan kuota slot per hari — kebutuhan dari perangkat desa.
-- Apakah janji temu berbasis slot waktu, nomor antrean harian, atau keduanya.
+Pertanyaan penentu arsitektur telah terjawab dan dicatat pada Subbagian 1.2. Yang tersisa bersifat
+konfigurasi atau operasional, sehingga dapat ditetapkan menjelang penggelaran tanpa mengubah rancangan.
+
+- Panjang satu slot dan jumlah slot per hari layanan.
+- Hari dan jam layanan, termasuk hari libur desa di luar libur nasional.
+- Apakah biometrik tetap dipertahankan sebagai kunci akses aplikasi meski bukan gerbang kriptografis.
+- Berapa lama warga ditunggu setelah dipanggil sebelum ditandai tidak hadir.
+- Batas waktu pembatalan oleh warga agar slot dapat dipakai orang lain.
+- Perangkat apa yang akan menayangkan penampil publik di kantor desa.

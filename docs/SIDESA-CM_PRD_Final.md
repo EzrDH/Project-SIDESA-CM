@@ -274,27 +274,30 @@ nomor berikutnya.
 | FR-408 | Peladen menolak bukti yang dikirim ulang, baik pada konteks sama maupun berbeda |
 | FR-409 | Nonce kelayakan kedaluwarsa dalam 5 menit dan ditandai terpakai setelah verifikasi berhasil |
 
-### 7.5 Modul Jenis Layanan, Slot, dan Kuota
+### 7.5 Modul Slot Waktu dan Ketersediaan
 
 | Kode | Kebutuhan |
 |---|---|
-| FR-501 | Operator dapat mendefinisikan jenis layanan beserta perkiraan durasi pelayanannya |
-| FR-502 | Operator dapat menetapkan hari dan jam layanan, termasuk hari libur atau agenda luar kantor |
-| FR-503 | Operator dapat menetapkan kuota harian per jenis layanan |
-| FR-504 | Sistem menolak pemesanan yang melampaui kuota atau berada di luar jam layanan |
-| FR-505 | Sistem menolak dua pemesanan terkonfirmasi pada slot waktu yang sama |
-| FR-506 | Perubahan jadwal yang berdampak pada tiket terbit memicu pemberitahuan kepada warga terkait |
+| FR-501 | Operator dapat menetapkan hari dan jam layanan beserta panjang satu slot waktu |
+| FR-502 | Sistem membangkitkan slot yang dapat dipesan berdasarkan jam layanan dan panjang slot |
+| FR-503 | Operator dapat menutup slot tertentu, misalnya karena kegiatan insidental Kepala Desa |
+| FR-504 | Sistem menolak pemesanan pada slot yang sudah diklaim, ditutup, atau berada di luar jam layanan |
+| FR-505 | Satu slot hanya dapat diklaim oleh satu janji temu |
+| FR-506 | Penutupan slot memindahkan janji temu terdampak ke status usulan penjadwalan ulang, disertai usulan slot pengganti dan pemberitahuan kepada warga |
+| FR-507 | Warga dapat menerima atau menolak usulan slot pengganti; penolakan membatalkan janji temu dan membebaskan slot |
 
 ### 7.6 Modul Pemesanan dan Nomor Antrean
 
 | Kode | Kebutuhan |
 |---|---|
-| FR-601 | Warga dapat memesan dengan memilih jenis layanan dan tanggal, serta slot bila tersedia |
-| FR-602 | Sistem menerbitkan nomor antrean yang unik untuk kombinasi tanggal dan jenis layanan |
+| FR-601 | Warga dapat memesan dengan memilih tanggal dan slot waktu yang tersedia |
+| FR-602 | Sistem menerbitkan nomor urut harian yang unik untuk setiap janji temu pada tanggal tersebut |
 | FR-603 | Penerbitan nomor bersifat berurutan dan bebas dari perebutan nomor ganda pada permintaan bersamaan |
 | FR-604 | Warga dapat membatalkan pemesanannya sendiri sebelum dipanggil |
 | FR-605 | Warga dapat melihat daftar pemesanan miliknya beserta status terkini |
-| FR-606 | Sistem membatasi jumlah tiket aktif per warga untuk mencegah penumpukan pemesanan |
+| FR-606 | Sistem membatasi jumlah janji temu aktif per warga untuk mencegah penumpukan pemesanan |
+| FR-607 | Operator dapat mencatat warga yang datang langsung sebagai janji temu pada slot yang masih kosong |
+| FR-608 | Slot yang telah diklaim melalui aplikasi tidak dapat diambil alih oleh pencatatan warga yang datang langsung, sehingga pemesan aplikasi terprioritaskan secara struktural |
 
 ### 7.7 Modul Papan Antrean Operator
 
@@ -321,7 +324,16 @@ nomor berikutnya.
 | FR-808 | Token yang tidak lagi sah dipangkas otomatis dari basis data |
 | FR-809 | Kegagalan pengiriman notifikasi tidak boleh menggagalkan transaksi layanan yang sudah tersimpan |
 
-### 7.9 Modul Check-in dan Riwayat
+### 7.9 Modul Penampil Publik di Kantor Desa
+
+| Kode | Kebutuhan |
+|---|---|
+| FR-851 | Tersedia halaman baca-saja tanpa autentikasi yang menampilkan nomor yang sedang dilayani, slot berjalan, dan daftar nomor berikutnya |
+| FR-852 | Halaman tersebut menyegarkan data secara berkala tanpa perlu dimuat ulang secara manual |
+| FR-853 | Halaman tersebut tidak menampilkan nama, NIK, maupun keperluan warga; hanya nomor urut dan waktu |
+| FR-854 | Halaman dapat ditayangkan pada layar atau monitor di ruang tunggu kantor desa |
+
+### 7.10 Modul Check-in dan Riwayat
 
 | Kode | Kebutuhan |
 |---|---|
@@ -331,7 +343,7 @@ nomor berikutnya.
 | FR-904 | Operator dapat melihat rekapitulasi jumlah tiket per jenis layanan dan per periode |
 | FR-905 | Rekapitulasi memuat jumlah dilayani, tidak hadir, dan dibatalkan |
 
-### 7.10 Modul Audit dan Administrasi
+### 7.11 Modul Audit dan Administrasi
 
 | Kode | Kebutuhan |
 |---|---|
@@ -716,11 +728,12 @@ Hal-hal berikut dilarang dalam basis kode produk ini:
 
 | Status | Makna | Transisi sah |
 |---|---|---|
-| `WAITING` | Tiket terbit dan menunggu giliran | ke `CALLED` oleh operator; ke `CANCELLED` oleh warga atau operator |
+| `BOOKED` | Slot diklaim dan menunggu giliran | ke `CALLED` oleh operator; ke `CANCELLED` oleh warga atau operator; ke `RESCHEDULE_SUGGESTED` bila slot ditutup |
 | `CALLED` | Nomor sedang dipanggil | ke `SERVED` atau `NO_SHOW` oleh operator |
 | `SERVED` | Warga telah dilayani | status akhir |
 | `NO_SHOW` | Warga tidak hadir saat dipanggil | ke `CALLED` bila dipanggil ulang |
-| `CANCELLED` | Pemesanan dibatalkan | status akhir |
+| `CANCELLED` | Pemesanan dibatalkan; slot kembali tersedia | status akhir |
+| `RESCHEDULE_SUGGESTED` | Slot ditutup, warga menerima usulan slot pengganti | ke `BOOKED` bila usulan diterima; ke `CANCELLED` bila ditolak |
 
 Setiap transisi dicatat beserta waktu dan pelakunya, dan hanya dapat dilakukan oleh peran yang berwenang.
 
@@ -944,8 +957,9 @@ kerentanan sekaligus meningkatkan rasa percaya diri penulisnya.
 
 Karena aplikasi tidak memproduksi tanda tangan elektronik, kepatuhan algoritma diposisikan pada
 konstruksi kriptografis yang dipakai, yakni bukti-pengetahuan dan akumulator keanggotaan di atas kurva
-P-384 dengan fungsi hash SHA-384. Posisi ini perlu dikonfirmasi kepada pembimbing sebagaimana tercatat
-pada Risiko R-1.
+P-384 dengan fungsi hash SHA-384. Posisi ini telah dikonfirmasi: Kepka 443 dipakai sebagai dasar
+pemilihan algoritma, sedangkan klaim mengenai kekuatan hukum tanda tangan elektronik dihapus karena
+aplikasi memang tidak memproduksinya.
 
 ## 16. Operasional dan Penggelaran
 
@@ -964,8 +978,8 @@ pada Risiko R-1.
 
 | ID | Risiko | Dampak | Mitigasi |
 |---|---|---|---|
-| R-1 | Posisi kepatuhan algoritma pada sistem tanpa tanda tangan dinilai belum jelas | Sedang | Dokumentasikan konstruksi yang dipakai beserta parameternya; konfirmasikan kepada pembimbing sebelum implementasi lanjut |
-| R-2 | Kunci identitas tidak terisolasi pada elemen aman perangkat keras | Sedang | Model ancaman terbatas pada gangguan pemesanan; kunci disimpan pada penyimpanan aman sistem; sediakan jalur pencabutan dan pendaftaran ulang |
+| R-1 | Posisi kepatuhan algoritma pada sistem tanpa tanda tangan dinilai belum jelas | Rendah | **Selesai.** Kepka 443 dipakai sebagai dasar pemilihan algoritma (P-384, SHA-384, AES-256); klaim kekuatan hukum tanda tangan dihapus karena aplikasi tidak memproduksinya |
+| R-2 | Kunci identitas tidak terisolasi pada elemen aman perangkat keras | Sedang | **Diterima** sebagai konsekuensi melekat pemilihan Schnorr. Model ancaman terbatas pada gangguan pemesanan; kunci disimpan pada penyimpanan aman sistem; tersedia jalur pencabutan dan pendaftaran ulang |
 | R-3 | Pemesanan dari akun yang sama dapat ditautkan satu sama lain | Rendah | Konsisten dengan pilihan rancangan; kredensial anonim dicatat sebagai pekerjaan lanjutan |
 | R-4 | Literasi digital warga rendah sehingga adopsi lambat | Tinggi | Antarmuka sederhana berbahasa Indonesia; pendampingan operator; pelatihan dan sosialisasi lapangan |
 | R-5 | Ketergantungan pada penyedia notifikasi pihak ketiga | Rendah | Muatan minimal tanpa data pribadi; kegagalan notifikasi tidak menggagalkan layanan; status tetap dapat dipantau dari aplikasi |
@@ -1036,10 +1050,9 @@ terpelihara.
 
 | Pertanyaan | Kepada |
 |---|---|
-| Konfirmasi posisi kepatuhan algoritma pada sistem tanpa tanda tangan elektronik | Dosen pembimbing |
-| Daftar jenis layanan yang akan dibuka pada tahap awal | Perangkat desa |
-| Kuota harian dan jam layanan per jenis layanan | Perangkat desa |
-| Apakah pemesanan berbasis slot waktu, nomor antrean harian, atau keduanya | Perangkat desa |
+| Panjang satu slot dan jumlah slot per hari layanan | Perangkat desa |
+| Hari dan jam layanan, termasuk hari libur desa | Perangkat desa |
+| Perangkat yang akan menayangkan penampil publik di kantor | Perangkat desa |
 | Apakah verifikasi biometrik dipertahankan sebagai kunci akses aplikasi | Pembimbing dan perangkat desa |
 | Kebijakan penyimpanan riwayat dan masa retensi data | Perangkat desa |
 
