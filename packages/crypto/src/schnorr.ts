@@ -67,3 +67,34 @@ export function verifyKnowledge(
   const rhs = R.add(P.multiply(c));
   return lhs.equals(rhs);
 }
+
+const POINT_BYTES = 49;
+export const PROOF_BYTES = POINT_BYTES + SCALAR_BYTES; // 49 + 48 = 97
+
+/** Wire form of a proof: compressed commitment R followed by the scalar s. */
+export function encodeProof(p: SchnorrProof): Uint8Array {
+  if (p.R.length !== POINT_BYTES || p.s.length !== SCALAR_BYTES) {
+    throw new Error('SchnorrProof has an unexpected shape');
+  }
+  const out = new Uint8Array(PROOF_BYTES);
+  out.set(p.R, 0);
+  out.set(p.s, POINT_BYTES);
+  return out;
+}
+
+export function decodeProof(bytes: Uint8Array): SchnorrProof {
+  if (bytes.length !== PROOF_BYTES) {
+    throw new Error(`Schnorr proof must be ${PROOF_BYTES} bytes, got ${bytes.length}`);
+  }
+  return { R: bytes.slice(0, POINT_BYTES), s: bytes.slice(POINT_BYTES) };
+}
+
+/**
+ * Read a stored private key (48-byte big-endian) as a Schnorr secret. The same
+ * scalar yields the same public key as ECDSA does, so enrolled keys keep working.
+ */
+export function secretFromBytes(bytes: Uint8Array): bigint {
+  const x = bytesToNumberBE(bytes);
+  if (x <= 0n || x >= N) throw new Error('secret out of range');
+  return x;
+}
