@@ -44,11 +44,13 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     return vr.body.token;
   }
 
+  const SITI_NIK_COMMITMENT = '4be453e3ff0d140cad05c4345baf07c359cfa371c93b83aa1fbcca58eda4cc60efc7f8c064f86f9b47fa4de7d6e8d467';
+
   async function issueCode(opToken: string) {
     const res = await request(app.getHttpServer())
       .post('/enroll/code')
       .set('Authorization', `Bearer ${opToken}`)
-      .send({ displayName: 'Siti Aminah', nikCommitment: 'commit-siti', attributes: 'rt=002;domisili=CibeteungMuara' })
+      .send({ displayName: 'Siti Aminah', nikCommitment: SITI_NIK_COMMITMENT, attributes: 'rt=002;domisili=CibeteungMuara' })
       .expect(201);
     return res.body.code as string;
   }
@@ -79,7 +81,7 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
 
     // Identity came from the operator-verified code, not from the device.
     const acc = await prisma.account.findUnique({ where: { id: claim.body.accountId } });
-    expect(acc?.nikCommitment).toBe('commit-siti');
+    expect(acc?.nikCommitment).toBe(SITI_NIK_COMMITMENT);
     expect(acc?.attributes).toBe('rt=002;domisili=CibeteungMuara');
   });
 
@@ -131,5 +133,14 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
 
   it('forbids a non-operator from issuing codes', async () => {
     await request(app.getHttpServer()).post('/enroll/code').send({ displayName: 'X', nikCommitment: 'y', attributes: 'z' }).expect(401);
+  });
+
+  it('rejects a nikCommitment that is a raw NIK instead of a SHA-384 digest', async () => {
+    const opToken = await login(operator, opId);
+    await request(app.getHttpServer())
+      .post('/enroll/code')
+      .set('Authorization', `Bearer ${opToken}`)
+      .send({ displayName: 'Siti Aminah', nikCommitment: '3201234567890001', attributes: 'rt=002;domisili=CibeteungMuara' })
+      .expect(400);
   });
 });

@@ -94,6 +94,9 @@ export function decodeProof(bytes: Uint8Array): SchnorrProof {
  * scalar yields the same public key as ECDSA does, so enrolled keys keep working.
  */
 export function secretFromBytes(bytes: Uint8Array): bigint {
+  if (bytes.length !== SCALAR_BYTES) {
+    throw new Error(`secret must be ${SCALAR_BYTES} bytes, got ${bytes.length}`);
+  }
   const x = bytesToNumberBE(bytes);
   if (x <= 0n || x >= N) throw new Error('secret out of range');
   return x;

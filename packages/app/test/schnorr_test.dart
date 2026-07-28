@@ -6,6 +6,28 @@ import 'package:sidesa_app/crypto/ecdsa.dart' show generateKeyPair, bytesToHex;
 import 'package:sidesa_app/crypto/schnorr.dart';
 
 void main() {
+  test('domainHash known-answer test (cross-language with TypeScript)', () {
+    // Cross-language known-answer test: this exact hex is asserted against
+    // both this schnorrDomainHash() and TypeScript's domainHash() in
+    // packages/crypto/test/schnorr.codec.test.ts. It exists so the two
+    // languages can be checked against a fixed, hardcoded target instead of
+    // relying on a shared artefact written by one suite and read by the
+    // other (see the interop vector below, and
+    // packages/crypto/test/interop.schnorr.test.ts, for why that alone was
+    // unsound). If you change the domain construction on one side, this
+    // constant will only catch you if you remember to update it on BOTH
+    // sides — that mismatch is exactly the bug this test is designed to
+    // catch.
+    const expectedHex =
+        'c604367af3418e34ffa9036605a4ad3df942b7c2dbab90ccb25443870b458c79eae0ae55c7487fd506f8bd6ff8d14676';
+    final h = schnorrDomainHash('SIDESA-schnorr-v1', [
+      Uint8List.fromList(utf8.encode('kat-publicKey')),
+      Uint8List.fromList(utf8.encode('kat-R')),
+      Uint8List.fromList(utf8.encode('kat-context')),
+    ]);
+    expect(bytesToHex(h), expectedHex);
+  });
+
   test('produces a 97-byte proof whose public key matches the ECDSA one', () {
     final kp = generateKeyPair();
     final ctx = Uint8List.fromList(utf8.encode('SIDESA-auth-v1|acc-1|nonce-1'));

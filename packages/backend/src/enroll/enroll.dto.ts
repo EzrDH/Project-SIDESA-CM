@@ -6,9 +6,7 @@ export class IssueCodeDto {
   @MaxLength(120)
   displayName!: string;
 
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(200)
+  @Matches(/^[0-9a-f]{96}$/, { message: 'nikCommitment harus digest SHA-384 (96 karakter heksadesimal huruf kecil), bukan NIK mentah.' })
   nikCommitment!: string;
 
   @IsString()
