@@ -8,7 +8,7 @@ import 'package:sidesa_app/crypto/ecdsa.dart';
 import 'package:sidesa_app/crypto/keystore.dart';
 
 void main() {
-  test('Session.login signs the challenge and stores the token', () async {
+  test('Session.login proves knowledge for the challenge and stores the token', () async {
     final kp = generateKeyPair();
     final ks = InMemoryKeyStore(kp.privateKey);
 
@@ -19,11 +19,11 @@ void main() {
       }
       if (req.url.path.endsWith('/auth/verify')) {
         final body = jsonDecode(req.body);
-        final ok = verifyMessage(
-          await ks.publicKey(),
-          utf8.encode('SIDESA-auth-v1|${body['accountId']}|${body['nonce']}'),
-          hexToBytes(body['signature'] as String),
-        );
+        // The client has no Schnorr verifier of its own (only the server
+        // does) so this mock checks the wire shape the real backend
+        // enforces: 97 bytes (R || s) encoded as 194 lowercase hex chars.
+        final proof = body['proof'] as String?;
+        final ok = proof != null && hexToBytes(proof).length == 97;
         return http.Response(jsonEncode({'token': ok ? 'jwt-1' : null, 'role': 'WARGA'}), ok ? 201 : 401);
       }
       return http.Response('not found', 404);

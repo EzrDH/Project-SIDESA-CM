@@ -2,13 +2,20 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { generateKeyPair, signMessage } from '@sidesa/crypto';
+import {
+  generateKeyPair, signMessage, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
+} from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
 import { buildEnrollMessage } from '../src/enroll/enroll.message';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+
+function schnorrProofHex(privateKey: Uint8Array, context: Uint8Array): string {
+  const x = secretFromBytes(privateKey);
+  return hex(encodeProof(proveKnowledge(x, derivePublic(x), context)));
+}
 
 describe('Device enrolment flow (e2e, needs Postgres)', () => {
   let app: INestApplication;
@@ -37,10 +44,10 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
 
   async function login(kp: { privateKey: Uint8Array }, accountId: string): Promise<string> {
     const ch = await request(app.getHttpServer()).post('/auth/challenge').send({ accountId });
-    const sig = hex(signMessage(kp.privateKey, buildAuthMessage(accountId, ch.body.nonce)));
+    const proof = schnorrProofHex(kp.privateKey, buildAuthMessage(accountId, ch.body.nonce));
     const vr = await request(app.getHttpServer())
       .post('/auth/verify')
-      .send({ accountId, nonce: ch.body.nonce, signature: sig });
+      .send({ accountId, nonce: ch.body.nonce, proof });
     return vr.body.token;
   }
 

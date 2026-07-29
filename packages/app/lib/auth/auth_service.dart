@@ -13,11 +13,11 @@ class AuthService {
     final ch = await _api.postJson('/auth/challenge', {'accountId': accountId});
     final nonce = ch['nonce'] as String;
     final message = Uint8List.fromList(utf8.encode('SIDESA-auth-v1|$accountId|$nonce'));
-    final signature = bytesToHex(await _keyStore.sign(message));
+    final proof = await _keyStore.prove(message);
     final vr = await _api.postJson('/auth/verify', {
       'accountId': accountId,
       'nonce': nonce,
-      'signature': signature,
+      'proof': bytesToHex(proof),
     });
     return (token: vr['token'] as String, role: (vr['role'] as String?) ?? 'WARGA');
   }

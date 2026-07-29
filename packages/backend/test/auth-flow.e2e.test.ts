@@ -2,12 +2,19 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { generateKeyPair, signMessage } from '@sidesa/crypto';
+import {
+  generateKeyPair, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
+} from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+
+function schnorrProofHex(privateKey: Uint8Array, context: Uint8Array): string {
+  const x = secretFromBytes(privateKey);
+  return hex(encodeProof(proveKnowledge(x, derivePublic(x), context)));
+}
 
 describe('auth + rbac flow (e2e, needs Postgres)', () => {
   let app: INestApplication;
@@ -40,9 +47,9 @@ describe('auth + rbac flow (e2e, needs Postgres)', () => {
 
     const ch = await request(app.getHttpServer()).post('/auth/challenge').send({ accountId });
     const nonce = ch.body.nonce as string;
-    const signature = hex(signMessage(kp.privateKey, buildAuthMessage(accountId, nonce)));
+    const proof = schnorrProofHex(kp.privateKey, buildAuthMessage(accountId, nonce));
 
-    const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId, nonce, signature });
+    const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId, nonce, proof });
     expect(vr.status).toBe(201);
     expect(vr.body.role).toBe('WARGA');
 
@@ -56,8 +63,8 @@ describe('auth + rbac flow (e2e, needs Postgres)', () => {
   it('forbids a WARGA from the ADMIN-only provisioning route', async () => {
     const account = await prisma.account.findFirst({ where: { publicKey: pkHex } });
     const ch = await request(app.getHttpServer()).post('/auth/challenge').send({ accountId: account!.id });
-    const signature = hex(signMessage(kp.privateKey, buildAuthMessage(account!.id, ch.body.nonce)));
-    const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId: account!.id, nonce: ch.body.nonce, signature });
+    const proof = schnorrProofHex(kp.privateKey, buildAuthMessage(account!.id, ch.body.nonce));
+    const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId: account!.id, nonce: ch.body.nonce, proof });
 
     const res = await request(app.getHttpServer())
       .post('/accounts/privileged')

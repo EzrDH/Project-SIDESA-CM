@@ -2,12 +2,19 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { generateKeyPair, signMessage } from '@sidesa/crypto';
+import {
+  generateKeyPair, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
+} from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+
+function schnorrProofHex(privateKey: Uint8Array, context: Uint8Array): string {
+  const x = secretFromBytes(privateKey);
+  return hex(encodeProof(proveKnowledge(x, derivePublic(x), context)));
+}
 
 describe('Notifications token endpoints (e2e, needs Postgres)', () => {
   let app: INestApplication; let prisma: PrismaService;
@@ -35,15 +42,15 @@ describe('Notifications token endpoints (e2e, needs Postgres)', () => {
 
   async function login(): Promise<string> {
     const ch = await request(app.getHttpServer()).post('/auth/challenge').send({ accountId: accId });
-    const sig = hex(signMessage(kp.privateKey, buildAuthMessage(accId, ch.body.nonce)));
-    const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId: accId, nonce: ch.body.nonce, signature: sig });
+    const proof = schnorrProofHex(kp.privateKey, buildAuthMessage(accId, ch.body.nonce));
+    const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId: accId, nonce: ch.body.nonce, proof });
     return vr.body.token;
   }
 
   async function login2(): Promise<string> {
     const ch = await request(app.getHttpServer()).post('/auth/challenge').send({ accountId: accId2 });
-    const sig = hex(signMessage(kp2.privateKey, buildAuthMessage(accId2, ch.body.nonce)));
-    const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId: accId2, nonce: ch.body.nonce, signature: sig });
+    const proof = schnorrProofHex(kp2.privateKey, buildAuthMessage(accId2, ch.body.nonce));
+    const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId: accId2, nonce: ch.body.nonce, proof });
     return vr.body.token;
   }
 
