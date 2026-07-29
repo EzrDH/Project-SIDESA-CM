@@ -1,5 +1,7 @@
-import { IsDefined, IsIn, IsObject, Matches } from 'class-validator';
+import { IsDefined, IsIn, IsObject, Matches, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { SIG_HEX } from '../auth/auth.dto';
+import { EligibilityEnvelopeDto } from '../registry/eligibility.dto';
 
 export const LETTER_TYPES = ['SURAT_PENGANTAR', 'SKTM', 'DOMISILI'] as const;
 
@@ -10,11 +12,14 @@ export class RequestLetterDto {
   @IsObject()
   formData!: Record<string, string>;
 
-  // The eligibility proof is passed through untouched — @sidesa/crypto is the
-  // authority on its validity, so we only require it to be present.
+  // @sidesa/crypto remains the authority on whether the proof is *valid*; the
+  // nested validation here only guarantees the verifier is handed the shape it
+  // declares, so a malformed body is a 400 rather than a crash inside the
+  // crypto layer.
   @IsDefined({ message: 'bukti kelayakan (eligibility) wajib disertakan.' })
-  @IsObject()
-  eligibility!: { proof: unknown; nonce: string };
+  @ValidateNested()
+  @Type(() => EligibilityEnvelopeDto)
+  eligibility!: EligibilityEnvelopeDto;
 }
 
 export class SignLetterDto {
