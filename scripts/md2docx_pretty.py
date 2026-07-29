@@ -148,6 +148,50 @@ def add_callout(doc, text):
     doc.add_paragraph()
 
 
+CODE_FILL = "F2F4F7"
+FENCE_MARK = "\x00FENCE:"
+FENCES = []
+
+
+def extract_fences(lines):
+    """Pull fenced blocks out before blank-line splitting, which would tear
+    them apart. Each becomes one sentinel line holding its index."""
+    out, i = [], 0
+    while i < len(lines):
+        m = re.match(r"^\s*```+\s*(\w*)\s*$", lines[i])
+        if not m:
+            out.append(lines[i]); i += 1; continue
+        lang, body, i = m.group(1), [], i + 1
+        while i < len(lines) and not re.match(r"^\s*```+\s*$", lines[i]):
+            body.append(lines[i]); i += 1
+        i += 1  # closing fence
+        FENCES.append((lang, body))
+        out.append("%s%d" % (FENCE_MARK, len(FENCES) - 1))
+    return out
+
+
+def add_code(doc, lang, body):
+    """Monospace box. Mermaid keeps its source and is labelled, since Word
+    cannot draw it -- the rendered picture lives in the Markdown version."""
+    if lang == "mermaid":
+        p = doc.add_paragraph()
+        r = p.add_run("Diagram (sumber mermaid — versi tergambar pada berkas Markdown)")
+        r.italic = True; r.font.size = Pt(8.5); r.font.color.rgb = GREY
+        p.paragraph_format.space_after = Pt(2)
+    t = doc.add_table(rows=1, cols=1); t.alignment = WD_TABLE_ALIGNMENT.CENTER
+    t.autofit = False; t.allow_autofit = False
+    cell = t.rows[0].cells[0]; cell.width = Cm(USABLE_CM)
+    shade(cell, CODE_FILL); set_cell_margins(cell, 90, 90, 140, 140)
+    cell.text = ""
+    for n, ln in enumerate(body):
+        p = cell.paragraphs[0] if n == 0 else cell.add_paragraph()
+        p.paragraph_format.space_after = Pt(0)
+        r = p.add_run(ln.rstrip())
+        r.font.name = "Consolas"; r.font.size = Pt(8)
+        r._element.rPr.rFonts.set(qn("w:eastAsia"), "Consolas")
+    doc.add_paragraph()
+
+
 def split_row(line):
     return [c.strip() for c in line.strip().strip("|").split("|")]
 
@@ -195,7 +239,7 @@ def main():
     # normalise inline math to unicode
     raw = re.sub(r"\\text\{([^}]*)\}", r"\1", raw).replace(r"\cdot", "·").replace(r"\|", "‖")
     raw = re.sub(r"\$([^$]*)\$", r"\1", raw)
-    lines = raw.splitlines()
+    lines = extract_fences(raw.splitlines())
 
     doc = Document()
     style_doc(doc)
@@ -206,6 +250,10 @@ def main():
 
     for block in blocks(lines):
         first = block[0].strip()
+
+        if first.startswith(FENCE_MARK):
+            add_code(doc, *FENCES[int(first[len(FENCE_MARK):])])
+            continue
 
         if first.startswith("|"):
             rows = [split_row(l) for l in block if l.strip().startswith("|") and not is_sep(l)]

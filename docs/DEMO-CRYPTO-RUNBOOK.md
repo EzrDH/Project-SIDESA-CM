@@ -1,4 +1,7 @@
 # Runbook Demo — Sisi Kriptografi SIDESA-CM
+
+> **Status dokumen — kedaluwarsa.** **Runbook ini sudah tidak dapat dijalankan apa adanya.** Disusun ketika gerbang identitas memakai tanda tangan ECDSA; sejak commit `a616fef` ketiganya memakai bukti Schnorr dengan format wire 97 bita (194 karakter heksadesimal). Perlu ditulis ulang pada Tahap 2. Rujukan kriptografi yang berlaku: `docs/ARSITEKTUR.md` bagian 6.
+
 **Untuk mata kuliah: Implementasi Kriptografi.** Durasi target: ~7 menit + Q&A.
 
 > Untuk **menjalankan & mencoba aplikasi per peran** (Warga / Operator / Kepala Desa),

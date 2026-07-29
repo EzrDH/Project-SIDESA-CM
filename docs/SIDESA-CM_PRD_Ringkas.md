@@ -389,19 +389,26 @@ bukti-pengetahuan Schnorr; peladen dengan autentikasi, kendali akses empat peran
 perangkat berbasis kode operator dengan bukti penguasaan kunci, jejak audit berantai-hash yang
 terverifikasi, pembatasan laju, dan validasi masukan; subsistem notifikasi dengan lapisan abstraksi
 pengirim dan muatan minimal; serta aplikasi Flutter dengan alur pendaftaran, masuk, dan pemesanan janji
-temu dasar. Sedang dan akan dikerjakan: penyatuan seluruh gerbang kriptografis pada satu primitif
-bukti-pengetahuan Schnorr, serta pembangunan subsistem antrean secara penuh.
+temu dasar.
+
+**Penyatuan seluruh gerbang kriptografis pada satu primitif telah selesai dan tergabung** (commit
+`a616fef`): autentikasi, pendaftaran perangkat, dan verifikasi kelayakan kini bertumpu pada
+bukti-pengetahuan Schnorr yang sama dan hanya dibedakan konteks pengikatnya, menolak masukan cacat
+secara seragam, dan dijaga pengujian anti-regresi — seluruhnya ditegakkan 168 pengujian otomatis.
+Berikutnya: penghapusan subsistem surat beserta sisa ECDSA di kode, lalu pembangunan subsistem antrean
+secara penuh. Rincian keadaan kode ada pada `docs/ARSITEKTUR.md`.
 
 ### 14.2 Peta Jalan
 
-| Tahap | Lingkup |
-|---|---|
-| 1 | Penyatuan kripto pada bukti-pengetahuan Schnorr untuk ketiga gerbang beserta padanan lintas bahasa |
-| 2 | Subsistem antrean: jenis layanan, jadwal dan kuota, tiket dan nomor antrean, papan operator |
-| 3 | Status berjalan, estimasi tunggu, check-in, riwayat dan rekapitulasi |
-| 4 | Penyambungan notifikasi antrean pada infrastruktur notifikasi |
-| 5 | Pengerasan rilis: TLS, pencabutan kunci, prosedur tata kelola |
-| 6 | Uji lapangan bersama perangkat desa, pelatihan, dan serah terima |
+| Tahap | Lingkup | Status |
+|---|---|---|
+| 1 | Penyatuan kripto pada bukti-pengetahuan Schnorr untuk ketiga gerbang beserta padanan lintas bahasa | **Selesai** |
+| 2 | Penghapusan subsistem surat, ECDSA, PDF/QR, dan keystore hardware yang tersisa | Siap dikerjakan |
+| 3 | Subsistem antrean: jenis layanan, jadwal dan kuota, tiket dan nomor antrean, papan operator | Menunggu wawancara desa |
+| 4 | Status berjalan, estimasi tunggu, check-in, riwayat dan rekapitulasi | Terencana |
+| 5 | Penyambungan notifikasi antrean pada infrastruktur notifikasi | Terencana |
+| 6 | Pengerasan rilis: TLS, *pepper* komitmen NIK, pencabutan kunci, prosedur tata kelola | Terencana |
+| 7 | Uji lapangan bersama perangkat desa, pelatihan, dan serah terima | Terencana |
 
 ### 14.3 Kriteria Penerimaan
 

@@ -1,5 +1,8 @@
 # Runbook Uji Coba 3 Peran — Warga / Operator / Kepala Desa
 
+> **Status dokumen — sebagian masih berlaku.** Langkah **pendaftaran perangkat dan masuk** masih berlaku. Langkah yang menyangkut **pengajuan dan penandatanganan surat** sudah keluar dari lingkup produk meskipun kodenya masih berjalan sampai Tahap 2. Lihat `docs/ARSITEKTUR.md` untuk alur yang berlaku.
+
+
 Panduan menjalankan aplikasi secara manual dan mencoba ketiga peran end-to-end.
 
 > **Peran TIDAK dipilih di UI.** Aplikasi menentukannya otomatis dari akun yang login:

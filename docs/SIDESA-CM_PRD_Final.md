@@ -942,8 +942,8 @@ kerentanan sekaligus meningkatkan rasa percaya diri penulisnya.
 | Training | Terpenuhi | Pembekalan kriptografi, regulasi, dan pemodelan ancaman |
 | Requirements | Terpenuhi | Dokumen ini beserta dokumen desain |
 | Design | Terpenuhi | Arsitektur aman, rancangan kriptografi, pemodelan ancaman STRIDE |
-| Implementation | Parsial | Infrastruktur bersama terpasang; subsistem antrean dan penyatuan kripto pada satu primitif sedang dikerjakan |
-| Verification | Parsial | Metodologi dan rangkaian pengujian terpasang; verifikasi subsistem antrean menyusul |
+| Implementation | Parsial | Infrastruktur bersama dan penyatuan kripto pada satu primitif selesai; subsistem antrean belum dikerjakan |
+| Verification | Parsial | 168 pengujian otomatis terpasang, separuhnya negatif; verifikasi subsistem antrean menyusul |
 | Release | Parsial | Pembatasan laju dan migrasi terkendali terpenuhi; penerapan TLS menyusul |
 | Response | Sebagian besar terpenuhi | Jejak audit tamper-evident terpasang dan terverifikasi; pencabutan kunci baru dirancang |
 
@@ -998,19 +998,27 @@ berantai-hash yang terverifikasi, pembatasan laju, dan validasi masukan; subsist
 lapisan abstraksi pengirim dan muatan minimal; serta aplikasi Flutter dengan alur pendaftaran, masuk,
 dan pemesanan janji temu dasar.
 
-Pekerjaan yang sedang dan akan dikerjakan: penyatuan seluruh gerbang kriptografis pada satu primitif
-bukti-pengetahuan Schnorr, serta pembangunan subsistem antrean secara penuh.
+**Penyatuan seluruh gerbang kriptografis pada satu primitif telah selesai dan tergabung** (commit
+`a616fef`). Autentikasi, pendaftaran perangkat, dan verifikasi kelayakan kini seluruhnya bertumpu pada
+bukti-pengetahuan Schnorr dan hanya dibedakan oleh konteks yang mengikat masing-masing bukti.
+Ketiganya menolak masukan cacat secara seragam pada batas masukan, dan sebuah pengujian penjaga
+menegakkan bahwa gerbang tidak dapat kembali memakai tanda tangan tanpa terdeteksi. Seluruhnya
+ditegakkan oleh 168 pengujian otomatis.
+
+Pekerjaan berikutnya: penghapusan subsistem surat beserta sisa ECDSA yang masih berada di kode, lalu
+pembangunan subsistem antrean secara penuh. Rincian keadaan kode ada pada `docs/ARSITEKTUR.md`.
 
 ### 18.2 Peta Jalan
 
-| Tahap | Lingkup | Keluaran |
-|---|---|---|
-| Tahap 1 | Penyatuan kripto pada bukti-pengetahuan Schnorr untuk ketiga gerbang, beserta padanan lintas bahasa | Pustaka dan peladen dengan satu primitif; uji interoperabilitas hijau |
-| Tahap 2 | Subsistem antrean: jenis layanan, jadwal dan kuota, tiket dan nomor antrean, papan operator | Alur pesan hingga dilayani berfungsi menyeluruh |
-| Tahap 3 | Status berjalan, estimasi tunggu, check-in, riwayat dan rekapitulasi | Pengalaman warga dan laporan operator lengkap |
-| Tahap 4 | Penyambungan notifikasi antrean pada infrastruktur notifikasi | Pemberitahuan giliran dan perubahan jadwal |
-| Tahap 5 | Pengerasan rilis: TLS, pencabutan kunci, prosedur tata kelola | Siap gelar terbatas |
-| Tahap 6 | Uji lapangan bersama perangkat desa, pelatihan, dan serah terima | Umpan balik keterpakaian dan dokumen serah terima |
+| Tahap | Lingkup | Keluaran | Status |
+|---|---|---|---|
+| Tahap 1 | Penyatuan kripto pada bukti-pengetahuan Schnorr untuk ketiga gerbang, beserta padanan lintas bahasa | Pustaka, peladen, dan aplikasi dengan satu primitif; uji interoperabilitas hijau | **Selesai** (`a616fef`) |
+| Tahap 2 | Penghapusan subsistem surat, ECDSA, pembuatan PDF/QR, dan keystore hardware yang tersisa | Kode bersih dari primitif kedua | Siap dikerjakan |
+| Tahap 3 | Subsistem antrean: jenis layanan, jadwal dan kuota, tiket dan nomor antrean, papan operator | Alur pesan hingga dilayani berfungsi menyeluruh | Menunggu wawancara desa |
+| Tahap 4 | Status berjalan, estimasi tunggu, check-in, riwayat dan rekapitulasi | Pengalaman warga dan laporan operator lengkap | Terencana |
+| Tahap 5 | Penyambungan notifikasi antrean pada infrastruktur notifikasi | Pemberitahuan giliran dan perubahan jadwal | Terencana |
+| Tahap 6 | Pengerasan rilis: TLS, *pepper* komitmen NIK, pencabutan kunci, prosedur tata kelola | Siap gelar terbatas | Terencana |
+| Tahap 7 | Uji lapangan bersama perangkat desa, pelatihan, dan serah terima | Umpan balik keterpakaian dan dokumen serah terima | Terencana |
 
 ## 19. Kriteria Penerimaan
 

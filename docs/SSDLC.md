@@ -1,5 +1,8 @@
 # Penerapan Secure SDLC (SSDLC) pada SIDESA-CM
 
+> **Status dokumen — sebagian masih berlaku.** Ditulis 20 Juli 2026, sebelum perancangan ulang. Uraian proses SSDLC-nya masih berlaku, tetapi contoh kendali yang menyebut tanda tangan ECDSA sudah tidak mencerminkan produk. Pembahasan SSDLC yang mutakhir ada pada `docs/SIDESA-CM_PRD_Final.md` bagian SSDLC dan pada `docs/ARSITEKTUR.md`.
+
+
 | | |
 |---|---|
 | **Project** | SIDESA-CM — Sistem Digital Layanan Desa Cibeteung Muara |

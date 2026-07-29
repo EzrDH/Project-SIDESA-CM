@@ -1,4 +1,7 @@
 # DESIGN.md — SIDESA-CM (UI/UX)
+
+> **Status dokumen — sebagian masih berlaku.** Panduan ini disusun sebelum perancangan ulang Juli 2026. Layar dan alur **surat** yang dijelaskan di sini sudah keluar dari lingkup produk, meskipun kodenya masih ada sampai Tahap 2. Prinsip visual, tipografi, warna, dan komponen Material 3 di dalamnya **tetap berlaku**. Untuk lingkup produk yang berlaku sekarang, lihat `docs/ARSITEKTUR.md`.
+
 ### Panduan desain untuk digenerate di Google Stitch (stitch.withgoogle.com) & diimplementasikan di Flutter (Material 3)
 
 ---

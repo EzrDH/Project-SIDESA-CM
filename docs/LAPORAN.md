@@ -1,5 +1,8 @@
 # Laporan Kemajuan Project SIDESA-CM
 
+> **Status dokumen — kedaluwarsa.** Laporan kemajuan per 20 Juli 2026 — **arsip historis**. Ditulis sebelum perancangan ulang yang menghapus tanda tangan dokumen digital dan menyatukan ketiga gerbang identitas pada bukti Schnorr. Untuk keadaan terkini lihat `docs/ARSITEKTUR.md`.
+
+
 | | |
 |---|---|
 | **Judul** | SIDESA-CM — Sistem Digital Layanan Desa Cibeteung Muara |
