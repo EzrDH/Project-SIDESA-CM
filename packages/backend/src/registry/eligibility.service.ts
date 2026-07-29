@@ -4,13 +4,9 @@ import { hexToBytes } from './registry.builder';
 import { RegistryService } from './registry.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { buildEligibilityContext } from './eligibility.context';
+import { EligibilityProofDto } from './eligibility.dto';
 
-export interface EligibilityProofDto {
-  publicKey: string;
-  attributes: string;
-  merkleProof: { sibling: string; isRight: boolean }[];
-  ownership: string; // compact ECDSA signature (hex) over the request context
-}
+export type { EligibilityProofDto };
 
 const enc = new TextEncoder();
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
@@ -28,17 +24,27 @@ export class EligibilityService {
     private readonly prisma: PrismaService,
   ) {}
 
+  /// Verify a proof against the currently published registry root.
+  ///
+  /// Returns {valid:false} rather than throwing on any input the verifier
+  /// cannot make sense of. The DTO layer already rejects malformed proofs with
+  /// a 400, so reaching the guard below means an internal caller bypassed it —
+  /// still a rejection, never a 500 that leaks a stack trace to an endpoint
+  /// that needs no credentials.
   async verify(dto: EligibilityProofDto, context: string): Promise<{ valid: boolean }> {
     const rootHexStr = await this.registry.activeRootHex();
     if (!rootHexStr) return { valid: false };
-    const proof = {
-      publicKey: hexToBytes(dto.publicKey),
-      attributes: enc.encode(dto.attributes),
-      merkleProof: dto.merkleProof.map((s) => ({ sibling: hexToBytes(s.sibling), isRight: s.isRight })),
-      ownership: hexToBytes(dto.ownership),
-    };
-    const valid = verifyEligibility(proof, hexToBytes(rootHexStr), enc.encode(context));
-    return { valid };
+    try {
+      const proof = {
+        publicKey: hexToBytes(dto.publicKey),
+        attributes: enc.encode(dto.attributes),
+        merkleProof: dto.merkleProof.map((s) => ({ sibling: hexToBytes(s.sibling), isRight: s.isRight })),
+        ownership: hexToBytes(dto.ownership),
+      };
+      return { valid: verifyEligibility(proof, hexToBytes(rootHexStr), enc.encode(context)) };
+    } catch {
+      return { valid: false };
+    }
   }
 
   /// Hand a warga a fresh single-use nonce to bind their next eligibility proof to.
@@ -61,6 +67,7 @@ export class EligibilityService {
     proof: EligibilityProofDto,
     nonce: string,
   ): Promise<boolean> {
+    if (typeof nonce !== 'string' || typeof proof?.publicKey !== 'string') return false;
     const ch = await this.prisma.eligibilityChallenge.findUnique({ where: { nonce } });
     if (!ch || ch.used || ch.accountId !== accountId) return false;
     if (ch.expiresAt.getTime() < Date.now()) return false;

@@ -94,6 +94,22 @@ class _RootGateState extends State<RootGate> {
     if (accountId.isNotEmpty) {
       try {
         await session.login(accountId);
+      } on UnsupportedError {
+        // Login now proves knowledge of the private scalar (Schnorr), and a
+        // hardware-backed key (StrongBox/Keystore) never releases that
+        // scalar to the app — KeyStore.prove throws UnsupportedError by
+        // design for such devices. That is not a network problem, so it
+        // must not be reported as one, and it must not fall through to the
+        // demo-mode login below: without a real session token the app would
+        // otherwise show a shell the user can't actually act in.
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Perangkat ini tidak mendukung masuk. Silakan daftarkan ulang perangkat.'),
+            ),
+          );
+        }
+        return;
       } catch (_) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

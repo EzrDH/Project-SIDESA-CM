@@ -2,7 +2,9 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { generateKeyPair, signMessage } from '@sidesa/crypto';
+import {
+  generateKeyPair, signMessage, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
+} from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
 import { hexToBytes } from '../src/registry/registry.builder';
@@ -11,10 +13,15 @@ import { PrismaService } from '../src/prisma/prisma.service';
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
 const enc = new TextEncoder();
 
+function schnorrProofHex(privateKey: Uint8Array, context: Uint8Array): string {
+  const x = secretFromBytes(privateKey);
+  return hex(encodeProof(proveKnowledge(x, derivePublic(x), context)));
+}
+
 async function login(app: INestApplication, kp: { privateKey: Uint8Array }, accountId: string): Promise<string> {
   const ch = await request(app.getHttpServer()).post('/auth/challenge').send({ accountId });
-  const sig = hex(signMessage(kp.privateKey, buildAuthMessage(accountId, ch.body.nonce)));
-  const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId, nonce: ch.body.nonce, signature: sig });
+  const proof = schnorrProofHex(kp.privateKey, buildAuthMessage(accountId, ch.body.nonce));
+  const vr = await request(app.getHttpServer()).post('/auth/verify').send({ accountId, nonce: ch.body.nonce, proof });
   return vr.body.token;
 }
 
@@ -67,7 +74,7 @@ describe('ZKP eligibility flow (e2e, needs Postgres)', () => {
       .set('Authorization', `Bearer ${waToken}`).expect(200);
 
     const context = 'permohonan:SKTM:seq=1';
-    const ownership = hex(signMessage(warga.privateKey, enc.encode(context)));
+    const ownership = schnorrProofHex(warga.privateKey, enc.encode(context));
     const proof = {
       publicKey: waPk,
       attributes: p.body.attributes,

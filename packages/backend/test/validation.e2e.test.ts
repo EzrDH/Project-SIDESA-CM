@@ -20,17 +20,17 @@ describe('Input validation (e2e)', () => {
     await request(app.getHttpServer()).post('/auth/challenge').send({}).expect(400);
   });
 
-  it('rejects a verify request whose signature is not 192 hex chars', async () => {
+  it('rejects a verify request whose proof is not 194 hex chars', async () => {
     await request(app.getHttpServer())
       .post('/auth/verify')
-      .send({ accountId: 'a', nonce: 'b', signature: 'not-a-signature' })
+      .send({ accountId: 'a', nonce: 'b', proof: 'not-a-proof' })
       .expect(400);
   });
 
   it('rejects a verify request with a missing field', async () => {
     await request(app.getHttpServer())
       .post('/auth/verify')
-      .send({ accountId: 'a', signature: 'a'.repeat(192) })
+      .send({ accountId: 'a', proof: 'a'.repeat(194) })
       .expect(400);
   });
 

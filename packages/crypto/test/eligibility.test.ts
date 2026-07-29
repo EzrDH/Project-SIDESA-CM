@@ -20,6 +20,13 @@ describe('eligibility proof', () => {
     expect(verifyEligibility(proof, tree.root, ctx)).toBe(true);
   });
 
+  it('carries a 97-byte Schnorr ownership proof', () => {
+    const { keys, attrs, tree } = buildRegistry(6);
+    const ctx = utf8ToBytes('permohonan#100');
+    const proof = proveEligibility(keys[3].privateKey, attrs[3], tree, 3, ctx);
+    expect(proof.ownership.length).toBe(97);
+  });
+
   it('rejects a non-member (key not in the registry)', () => {
     const { tree } = buildRegistry(6);
     const outsider = generateKeyPair();

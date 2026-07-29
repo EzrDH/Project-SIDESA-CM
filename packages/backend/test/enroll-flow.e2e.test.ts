@@ -2,13 +2,20 @@ import { Test } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { generateKeyPair, signMessage } from '@sidesa/crypto';
+import {
+  generateKeyPair, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
+} from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
 import { buildEnrollMessage } from '../src/enroll/enroll.message';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+
+function schnorrProofHex(privateKey: Uint8Array, context: Uint8Array): string {
+  const x = secretFromBytes(privateKey);
+  return hex(encodeProof(proveKnowledge(x, derivePublic(x), context)));
+}
 
 describe('Device enrolment flow (e2e, needs Postgres)', () => {
   let app: INestApplication;
@@ -37,10 +44,10 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
 
   async function login(kp: { privateKey: Uint8Array }, accountId: string): Promise<string> {
     const ch = await request(app.getHttpServer()).post('/auth/challenge').send({ accountId });
-    const sig = hex(signMessage(kp.privateKey, buildAuthMessage(accountId, ch.body.nonce)));
+    const proof = schnorrProofHex(kp.privateKey, buildAuthMessage(accountId, ch.body.nonce));
     const vr = await request(app.getHttpServer())
       .post('/auth/verify')
-      .send({ accountId, nonce: ch.body.nonce, signature: sig });
+      .send({ accountId, nonce: ch.body.nonce, proof });
     return vr.body.token;
   }
 
@@ -63,11 +70,11 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     // Device generates its key and proves possession over (code, publicKey).
     const device = generateKeyPair();
     const devPk = hex(device.publicKey);
-    const pop = hex(signMessage(device.privateKey, buildEnrollMessage(code, devPk)));
+    const pop = schnorrProofHex(device.privateKey, buildEnrollMessage(code, devPk));
 
     const claim = await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: devPk, signature: pop })
+      .send({ code, publicKey: devPk, proof: pop })
       .expect(201);
 
     expect(claim.body.accountId).toBeTruthy();
@@ -93,7 +100,7 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     const firstPk = hex(first.publicKey);
     const r1 = await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: firstPk, signature: hex(signMessage(first.privateKey, buildEnrollMessage(code, firstPk))) })
+      .send({ code, publicKey: firstPk, proof: schnorrProofHex(first.privateKey, buildEnrollMessage(code, firstPk)) })
       .expect(201);
     created.push(r1.body.accountId);
 
@@ -101,7 +108,7 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     const secondPk = hex(second.publicKey);
     await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: secondPk, signature: hex(signMessage(second.privateKey, buildEnrollMessage(code, secondPk))) })
+      .send({ code, publicKey: secondPk, proof: schnorrProofHex(second.privateKey, buildEnrollMessage(code, secondPk)) })
       .expect(400);
   });
 
@@ -112,12 +119,12 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     const victim = generateKeyPair();      // key the attacker does NOT control
     const attacker = generateKeyPair();
     const victimPk = hex(victim.publicKey);
-    // Attacker signs with their own key but submits the victim's public key.
-    const badPop = hex(signMessage(attacker.privateKey, buildEnrollMessage(code, victimPk)));
+    // Attacker proves knowledge of their own key but submits the victim's public key.
+    const badPop = schnorrProofHex(attacker.privateKey, buildEnrollMessage(code, victimPk));
 
     await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: victimPk, signature: badPop })
+      .send({ code, publicKey: victimPk, proof: badPop })
       .expect(400);
   });
 
@@ -127,12 +134,37 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     const code = 'ZZZZ-ZZZZ';
     await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: devPk, signature: hex(signMessage(device.privateKey, buildEnrollMessage(code, devPk))) })
+      .send({ code, publicKey: devPk, proof: schnorrProofHex(device.privateKey, buildEnrollMessage(code, devPk)) })
       .expect(400);
   });
 
   it('forbids a non-operator from issuing codes', async () => {
     await request(app.getHttpServer()).post('/enroll/code').send({ displayName: 'X', nikCommitment: 'y', attributes: 'z' }).expect(401);
+  });
+
+  it('treats an upper-case public key as the same key, so one key cannot hold two accounts', async () => {
+    const opToken = await login(operator, opId);
+    const device = generateKeyPair();
+    const devPk = hex(device.publicKey);
+
+    const first = await issueCode(opToken);
+    const claimed = await request(app.getHttpServer())
+      .post('/enroll/claim')
+      .send({ code: first, publicKey: devPk, proof: schnorrProofHex(device.privateKey, buildEnrollMessage(first, devPk)) })
+      .expect(201);
+    created.push(claimed.body.accountId);
+
+    // Same key, different casing. The uniqueness check is a string comparison,
+    // so without normalisation this would mint a second account for one key.
+    const second = await issueCode(opToken);
+    const upper = devPk.toUpperCase();
+    await request(app.getHttpServer())
+      .post('/enroll/claim')
+      .send({ code: second, publicKey: upper, proof: schnorrProofHex(device.privateKey, buildEnrollMessage(second, upper)) })
+      .expect(409);
+
+    const rows = await prisma.account.findMany({ where: { publicKey: { in: [devPk, upper] } } });
+    expect(rows).toHaveLength(1);
   });
 
   it('rejects a nikCommitment that is a raw NIK instead of a SHA-384 digest', async () => {

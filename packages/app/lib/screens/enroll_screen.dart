@@ -35,6 +35,18 @@ class _EnrollScreenState extends State<EnrollScreen> {
     try {
       final identity = await session.daftarPerangkat(_code.text);
       widget.onEnrolled(identity);
+    } on UnsupportedError {
+      // Enrolment now proves knowledge of the private scalar (Schnorr), which a
+      // hardware-backed key never releases — KeyStore.prove throws
+      // UnsupportedError by design. The operator's code is perfectly good, so
+      // saying otherwise would send the resident back for replacement codes
+      // that could never be claimed either.
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _error = 'Perangkat ini belum didukung untuk pendaftaran. Sampaikan ke petugas desa.';
+        });
+      }
     } catch (_) {
       if (mounted) {
         setState(() {

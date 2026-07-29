@@ -31,7 +31,7 @@ export class EnrollController {
   @Post('claim')
   @Throttle({ default: { ttl: 60_000, limit: 10 } })
   async claim(@Body() body: ClaimCodeDto) {
-    const res = await this.enroll.claim(body.code, body.publicKey, body.signature);
+    const res = await this.enroll.claim(body.code, body.publicKey, body.proof);
     await this.audit.record(res.accountId, 'ENROLL_CLAIM', res.accountId, { displayName: res.displayName });
     return res;
   }

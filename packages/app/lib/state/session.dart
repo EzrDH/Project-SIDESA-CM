@@ -38,7 +38,8 @@ class Session {
 
   bool get isLoggedIn => token != null;
 
-  /// Key-possession login: fetch a challenge, sign it, exchange for a JWT.
+  /// Key-possession login: fetch a single-use challenge, prove knowledge of the
+  /// private scalar over it (Schnorr, zero-knowledge), exchange that for a JWT.
   Future<void> login(String accountId) async {
     final res = await _auth.login(accountId);
     token = res.token;
@@ -72,17 +73,19 @@ class Session {
 
   /// Claim a one-time enrolment code issued by an operator, binding this
   /// device's key to the identity the operator verified from the resident's KTP.
-  /// Signing the (code, publicKey) pair proves we hold the private key, so a
-  /// stolen code cannot be used to enrol somebody else's key.
+  /// Proving knowledge of the private scalar behind (code, publicKey) — a
+  /// Schnorr zero-knowledge proof, without ever revealing the key itself —
+  /// shows we actually control this key, so a stolen code cannot be used to
+  /// enrol a key nobody holds and permanently lock out its rightful owner.
   Future<DeviceIdentity> daftarPerangkat(String code) async {
     final normalized = code.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
     final pubHex = bytesToHex(await keyStore.publicKey());
     final message = utf8.encode('SIDESA-enroll-v1|$normalized|$pubHex');
-    final signature = await keyStore.sign(Uint8List.fromList(message));
+    final proof = await keyStore.prove(Uint8List.fromList(message));
     final res = await api.postJson('/enroll/claim', {
       'code': normalized,
       'publicKey': pubHex,
-      'signature': bytesToHex(signature),
+      'proof': bytesToHex(proof),
     });
     return DeviceIdentity(
       accountId: res['accountId'] as String,
@@ -110,16 +113,18 @@ class Session {
   /// Submit a letter request, gated by an eligibility proof.
   ///
   /// Flow: fetch a single-use nonce, fetch this account's Merkle membership
-  /// proof, then sign the (account, type, nonce) context to prove control of
-  /// the registered pseudonymous key. The raw NIK is never sent; the server
-  /// verifies membership + ownership and burns the nonce. Ownership is an ECDSA
-  /// signature (not Schnorr) so a hardware-backed key can produce it too.
+  /// proof, then prove knowledge of the secret behind the (account, type,
+  /// nonce) context to prove control of the registered pseudonymous key. The
+  /// raw NIK is never sent; the server verifies membership + ownership and
+  /// burns the nonce. Ownership is a Schnorr zero-knowledge proof of
+  /// knowledge, bound to this single-use context so a captured proof cannot
+  /// be replayed.
   Future<String> ajukanSurat(String type, Map<String, String> formData) async {
     final nonce = (await api.postJson('/letters/eligibility-challenge', const {}))['nonce'] as String;
     final rp = (await api.getJson('/registry/proof')) as Map<String, dynamic>;
     final pub = await keyStore.publicKey();
     final context = utf8.encode('SIDESA-letter-eligibility-v1|$accountId|$type|$nonce');
-    final ownership = await keyStore.sign(Uint8List.fromList(context));
+    final ownership = await keyStore.prove(Uint8List.fromList(context));
     final eligibility = {
       'proof': {
         'publicKey': bytesToHex(pub),

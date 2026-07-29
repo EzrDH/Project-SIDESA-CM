@@ -1,4 +1,4 @@
-import { verifyMessage } from '@sidesa/crypto';
+import { verifyKnowledge, decodeProof } from '@sidesa/crypto';
 import { buildAuthMessage } from './auth.message';
 
 export type Role = 'ADMIN' | 'KADES' | 'OPERATOR' | 'WARGA';
@@ -37,7 +37,7 @@ export class AuthService {
   async verifyResponse(
     accountId: string,
     nonce: string,
-    signatureHex: string,
+    proofHex: string,
   ): Promise<{ ok: boolean; role?: Role }> {
     const challenge = await this.challenges.find(nonce);
     if (!challenge || challenge.used || challenge.accountId !== accountId) return { ok: false };
@@ -46,11 +46,16 @@ export class AuthService {
     const account = await this.accounts.get(accountId);
     if (!account || account.status !== 'ACTIVE') return { ok: false };
 
-    const ok = verifyMessage(
-      hexToBytes(account.publicKey),
-      buildAuthMessage(accountId, nonce),
-      hexToBytes(signatureHex),
-    );
+    let ok = false;
+    try {
+      ok = verifyKnowledge(
+        hexToBytes(account.publicKey),
+        decodeProof(hexToBytes(proofHex)),
+        buildAuthMessage(accountId, nonce),
+      );
+    } catch {
+      ok = false; // malformed proof bytes are simply a failed authentication
+    }
     if (!ok) return { ok: false };
 
     await this.challenges.markUsed(nonce);

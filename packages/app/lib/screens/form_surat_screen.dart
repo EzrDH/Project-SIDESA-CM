@@ -51,8 +51,14 @@ class _FormSuratScreenState extends State<FormSuratScreen> {
         messenger.showSnackBar(const SnackBar(content: Text('Mode demo — permohonan disimulasikan.')));
       }
       navigator.pop();
+    } on UnsupportedError {
+      // The eligibility proof needs the private scalar, which a hardware-backed
+      // key never releases. Retrying cannot succeed, so don't invite it.
+      messenger.showSnackBar(const SnackBar(
+        content: Text('Perangkat ini belum didukung untuk mengajukan surat. Sampaikan ke petugas desa.'),
+      ));
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text('Gagal mengirim permohonan. Coba lagi.')));
+      messenger.showSnackBar(const SnackBar(content: Text('Gagal mengirim permohonan. Coba lagi.')));
     } finally {
       if (mounted) setState(() => _sending = false);
     }

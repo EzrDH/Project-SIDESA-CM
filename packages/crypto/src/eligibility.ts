@@ -1,5 +1,5 @@
 import { MerkleTree, ProofStep, verifyProof } from './merkle';
-import { getPublicKey, signMessage, verifyMessage } from './ecdsa';
+import { derivePublic, secretFromBytes, proveKnowledge, verifyKnowledge, encodeProof, decodeProof } from './schnorr';
 import { domainHash } from './hash';
 
 export function computeLeaf(publicKey: Uint8Array, attributes: Uint8Array): Uint8Array {
@@ -10,7 +10,7 @@ export interface EligibilityProof {
   publicKey: Uint8Array;    // revealed pseudonymous identity key P
   attributes: Uint8Array;   // revealed attributes required for the service
   merkleProof: ProofStep[]; // membership of the leaf under the signed root
-  ownership: Uint8Array;    // compact ECDSA signature over context (proves control of P)
+  ownership: Uint8Array;    // 97-byte encoded Schnorr proof over context (proves control of P)
 }
 
 export function proveEligibility(
@@ -20,12 +20,13 @@ export function proveEligibility(
   leafIndex: number,
   context: Uint8Array
 ): EligibilityProof {
-  const publicKey = getPublicKey(privateKey);
+  const secret = secretFromBytes(privateKey);
+  const publicKey = derivePublic(secret);
   const merkleProof = tree.getProof(leafIndex);
-  // ECDSA signature over the (domain-separated, nonce-bearing) context. Equivalent
-  // proof-of-control to the previous Schnorr PoK, but usable by hardware keys that
-  // only expose ECDSA. The context is single-use, so the signature cannot be replayed.
-  const ownership = signMessage(privateKey, context);
+  // Schnorr proof of knowledge of the scalar behind publicKey, bound to the
+  // single-use request context. Reveals nothing about the secret, and a captured
+  // proof is worthless under any other context.
+  const ownership = encodeProof(proveKnowledge(secret, publicKey, context));
   return { publicKey, attributes, merkleProof, ownership };
 }
 
@@ -36,6 +37,9 @@ export function verifyEligibility(
 ): boolean {
   const leaf = computeLeaf(proof.publicKey, proof.attributes);
   if (!verifyProof(leaf, proof.merkleProof, signedRoot)) return false; // registered resident?
-  if (!verifyMessage(proof.publicKey, context, proof.ownership)) return false; // owns key + bound to request
-  return true;
+  try {
+    return verifyKnowledge(proof.publicKey, decodeProof(proof.ownership), context);
+  } catch {
+    return false;
+  }
 }
