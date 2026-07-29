@@ -72,8 +72,10 @@ class Session {
 
   /// Claim a one-time enrolment code issued by an operator, binding this
   /// device's key to the identity the operator verified from the resident's KTP.
-  /// Signing the (code, publicKey) pair proves we hold the private key, so a
-  /// stolen code cannot be used to enrol somebody else's key.
+  /// Proving knowledge of the private scalar behind (code, publicKey) — a
+  /// Schnorr zero-knowledge proof, without ever revealing the key itself —
+  /// shows we actually control this key, so a stolen code cannot be used to
+  /// enrol a key nobody holds and permanently lock out its rightful owner.
   Future<DeviceIdentity> daftarPerangkat(String code) async {
     final normalized = code.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
     final pubHex = bytesToHex(await keyStore.publicKey());

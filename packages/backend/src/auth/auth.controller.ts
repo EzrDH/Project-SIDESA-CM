@@ -18,7 +18,7 @@ export class AuthController {
   @Post('verify')
   async verify(@Body() body: VerifyDto) {
     const res = await this.auth.verifyResponse(body.accountId, body.nonce, body.proof);
-    if (!res.ok) throw new UnauthorizedException('Bukti tanda tangan tidak valid.');
+    if (!res.ok) throw new UnauthorizedException('Bukti kepemilikan kunci tidak valid.');
     const token = this.jwt.sign({ accountId: body.accountId, role: res.role }, { expiresIn: '30m' });
     return { token, role: res.role };
   }
