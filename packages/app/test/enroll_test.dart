@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -83,4 +84,55 @@ void main() {
     expect(find.textContaining('tidak valid'), findsOneWidget);
     expect(find.text('Daftarkan perangkat'), findsOneWidget);
   });
+
+  testWidgets('a hardware-backed key is not blamed on the operator\'s code', (tester) async {
+    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    // A StrongBox/Keystore key never releases the private scalar, so prove()
+    // throws UnsupportedError. Reporting that as a bad code would send the
+    // resident back to the desk for a replacement that cannot be claimed either.
+    var requested = false;
+    final mock = MockClient((req) async {
+      requested = true;
+      return http.Response('unreachable', 500);
+    });
+    final session = Session(
+      api: ApiClient('http://test', client: mock),
+      keyStore: _HardwareOnlyKeyStore(generateKeyPair().privateKey),
+    );
+
+    var called = false;
+    await tester.pumpWidget(SessionScope(
+      session: session,
+      child: MaterialApp(home: EnrollScreen(onEnrolled: (_) => called = true)),
+    ));
+
+    await tester.enterText(find.byType(TextField), 'ABCD-EFGH');
+    await tester.tap(find.text('Daftarkan perangkat'));
+    await tester.pumpAndSettle();
+
+    expect(called, isFalse);
+    expect(requested, isFalse, reason: 'no proof can be built, so nothing should be sent');
+    expect(find.textContaining('belum didukung'), findsOneWidget);
+    expect(find.textContaining('tidak valid'), findsNothing);
+  });
+}
+
+/// Mimics AndroidKeyStore: it can hand out the public key and sign, but the
+/// private scalar never leaves the secure element, so prove() cannot work.
+class _HardwareOnlyKeyStore implements KeyStore {
+  final Uint8List _privateKey;
+  _HardwareOnlyKeyStore(this._privateKey);
+
+  @override
+  Future<Uint8List> publicKey() async => publicKeyFromPrivate(_privateKey);
+
+  @override
+  Future<Uint8List> sign(Uint8List message) async => signMessage(_privateKey, message);
+
+  @override
+  Future<Uint8List> prove(Uint8List context) async =>
+      throw UnsupportedError('hardware-backed key cannot produce a Schnorr proof');
 }
