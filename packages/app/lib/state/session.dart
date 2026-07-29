@@ -38,7 +38,8 @@ class Session {
 
   bool get isLoggedIn => token != null;
 
-  /// Key-possession login: fetch a challenge, sign it, exchange for a JWT.
+  /// Key-possession login: fetch a single-use challenge, prove knowledge of the
+  /// private scalar over it (Schnorr, zero-knowledge), exchange that for a JWT.
   Future<void> login(String accountId) async {
     final res = await _auth.login(accountId);
     token = res.token;
