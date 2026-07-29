@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
-  generateKeyPair, signMessage, hashUtf8, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
+  generateKeyPair, hashUtf8, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
 } from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
@@ -81,8 +81,8 @@ describe('raw NIK never reaches the server (e2e, needs Postgres)', () => {
 
     const device = generateKeyPair();
     const devPk = hex(device.publicKey);
-    const pop = hex(signMessage(device.privateKey, buildEnrollMessage(code, devPk)));
-    const claim = await post('/enroll/claim', { code, publicKey: devPk, signature: pop });
+    const pop = schnorrProofHex(device.privateKey, buildEnrollMessage(code, devPk));
+    const claim = await post('/enroll/claim', { code, publicKey: devPk, proof: pop });
     expect(claim.status).toBe(201);
     const accountId = claim.body.accountId as string;
     created.push(accountId);

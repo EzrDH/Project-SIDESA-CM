@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
-  generateKeyPair, signMessage, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
+  generateKeyPair, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
 } from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
@@ -70,11 +70,11 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     // Device generates its key and proves possession over (code, publicKey).
     const device = generateKeyPair();
     const devPk = hex(device.publicKey);
-    const pop = hex(signMessage(device.privateKey, buildEnrollMessage(code, devPk)));
+    const pop = schnorrProofHex(device.privateKey, buildEnrollMessage(code, devPk));
 
     const claim = await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: devPk, signature: pop })
+      .send({ code, publicKey: devPk, proof: pop })
       .expect(201);
 
     expect(claim.body.accountId).toBeTruthy();
@@ -100,7 +100,7 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     const firstPk = hex(first.publicKey);
     const r1 = await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: firstPk, signature: hex(signMessage(first.privateKey, buildEnrollMessage(code, firstPk))) })
+      .send({ code, publicKey: firstPk, proof: schnorrProofHex(first.privateKey, buildEnrollMessage(code, firstPk)) })
       .expect(201);
     created.push(r1.body.accountId);
 
@@ -108,7 +108,7 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     const secondPk = hex(second.publicKey);
     await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: secondPk, signature: hex(signMessage(second.privateKey, buildEnrollMessage(code, secondPk))) })
+      .send({ code, publicKey: secondPk, proof: schnorrProofHex(second.privateKey, buildEnrollMessage(code, secondPk)) })
       .expect(400);
   });
 
@@ -119,12 +119,12 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     const victim = generateKeyPair();      // key the attacker does NOT control
     const attacker = generateKeyPair();
     const victimPk = hex(victim.publicKey);
-    // Attacker signs with their own key but submits the victim's public key.
-    const badPop = hex(signMessage(attacker.privateKey, buildEnrollMessage(code, victimPk)));
+    // Attacker proves knowledge of their own key but submits the victim's public key.
+    const badPop = schnorrProofHex(attacker.privateKey, buildEnrollMessage(code, victimPk));
 
     await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: victimPk, signature: badPop })
+      .send({ code, publicKey: victimPk, proof: badPop })
       .expect(400);
   });
 
@@ -134,7 +134,7 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     const code = 'ZZZZ-ZZZZ';
     await request(app.getHttpServer())
       .post('/enroll/claim')
-      .send({ code, publicKey: devPk, signature: hex(signMessage(device.privateKey, buildEnrollMessage(code, devPk))) })
+      .send({ code, publicKey: devPk, proof: schnorrProofHex(device.privateKey, buildEnrollMessage(code, devPk)) })
       .expect(400);
   });
 

@@ -78,11 +78,11 @@ class Session {
     final normalized = code.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
     final pubHex = bytesToHex(await keyStore.publicKey());
     final message = utf8.encode('SIDESA-enroll-v1|$normalized|$pubHex');
-    final signature = await keyStore.sign(Uint8List.fromList(message));
+    final proof = await keyStore.prove(Uint8List.fromList(message));
     final res = await api.postJson('/enroll/claim', {
       'code': normalized,
       'publicKey': pubHex,
-      'signature': bytesToHex(signature),
+      'proof': bytesToHex(proof),
     });
     return DeviceIdentity(
       accountId: res['accountId'] as String,

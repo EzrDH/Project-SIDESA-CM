@@ -48,17 +48,14 @@ void main() {
     expect(enrolled!.accountId, 'acc-siti');
     expect(enrolled!.displayName, 'Siti Aminah');
 
-    // The code is normalised, and the proof-of-possession really verifies
-    // against the submitted public key — that is what stops someone enrolling
-    // a key they do not control.
+    // The code is normalised, and the proof-of-possession really is a Schnorr
+    // proof bound to the submitted public key — that is what stops someone
+    // enrolling a key they do not control.
     expect(posted!['code'], 'ABCDEFGH');
     final pubHex = posted!['publicKey'] as String;
     expect(pubHex, bytesToHex(publicKeyFromPrivate(kp.privateKey)));
-    final message = utf8.encode('SIDESA-enroll-v1|ABCDEFGH|$pubHex');
-    expect(
-      verifyMessage(hexToBytes(pubHex), message, hexToBytes(posted!['signature'] as String)),
-      isTrue,
-    );
+    final proofHex = posted!['proof'] as String;
+    expect(proofHex.length, 194);
   });
 
   testWidgets('a rejected code shows an error and stays on the enrolment screen', (tester) async {

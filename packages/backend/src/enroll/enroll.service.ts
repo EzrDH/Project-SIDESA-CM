@@ -1,5 +1,5 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
-import { domainHash, verifyMessage } from '@sidesa/crypto';
+import { domainHash, verifyKnowledge, decodeProof } from '@sidesa/crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { hexToBytes } from '../registry/registry.builder';
 import { buildEnrollMessage, normalizeCode } from './enroll.message';
@@ -61,16 +61,21 @@ export class EnrollService {
   async claim(
     code: string,
     publicKey: string,
-    signatureHex: string,
+    proofHex: string,
   ): Promise<{ accountId: string; role: string; displayName: string }> {
     const invalid = () => new BadRequestException('Kode enrolmen tidak valid atau kedaluwarsa.');
     const rec = await this.prisma.enrollmentCode.findUnique({ where: { codeHash: this.hashCode(code) } });
     if (!rec || rec.used || rec.expiresAt.getTime() < Date.now()) throw invalid();
 
-    // Proof of possession: the caller must hold the private key for this public key.
+    // Proof of possession: the caller must prove knowledge of the private key
+    // for this public key (Schnorr ZKP), bound to (code, publicKey).
     let ok = false;
     try {
-      ok = verifyMessage(hexToBytes(publicKey), buildEnrollMessage(code, publicKey), hexToBytes(signatureHex));
+      ok = verifyKnowledge(
+        hexToBytes(publicKey),
+        decodeProof(hexToBytes(proofHex)),
+        buildEnrollMessage(code, publicKey),
+      );
     } catch {
       ok = false;
     }
