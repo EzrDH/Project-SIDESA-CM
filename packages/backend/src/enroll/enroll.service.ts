@@ -60,9 +60,14 @@ export class EnrollService {
   /// probe which codes exist.
   async claim(
     code: string,
-    publicKey: string,
+    publicKeyInput: string,
     proofHex: string,
   ): Promise<{ accountId: string; role: string; displayName: string }> {
+    // Store and compare one canonical form. The uniqueness check below is what
+    // stops a key being enrolled twice, and it is a plain string equality — so
+    // the same key sent in upper case would otherwise slip past it and create a
+    // second account for one key.
+    const publicKey = publicKeyInput.toLowerCase();
     const invalid = () => new BadRequestException('Kode enrolmen tidak valid atau kedaluwarsa.');
     const rec = await this.prisma.enrollmentCode.findUnique({ where: { codeHash: this.hashCode(code) } });
     if (!rec || rec.used || rec.expiresAt.getTime() < Date.now()) throw invalid();

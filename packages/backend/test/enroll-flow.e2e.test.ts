@@ -142,6 +142,31 @@ describe('Device enrolment flow (e2e, needs Postgres)', () => {
     await request(app.getHttpServer()).post('/enroll/code').send({ displayName: 'X', nikCommitment: 'y', attributes: 'z' }).expect(401);
   });
 
+  it('treats an upper-case public key as the same key, so one key cannot hold two accounts', async () => {
+    const opToken = await login(operator, opId);
+    const device = generateKeyPair();
+    const devPk = hex(device.publicKey);
+
+    const first = await issueCode(opToken);
+    const claimed = await request(app.getHttpServer())
+      .post('/enroll/claim')
+      .send({ code: first, publicKey: devPk, proof: schnorrProofHex(device.privateKey, buildEnrollMessage(first, devPk)) })
+      .expect(201);
+    created.push(claimed.body.accountId);
+
+    // Same key, different casing. The uniqueness check is a string comparison,
+    // so without normalisation this would mint a second account for one key.
+    const second = await issueCode(opToken);
+    const upper = devPk.toUpperCase();
+    await request(app.getHttpServer())
+      .post('/enroll/claim')
+      .send({ code: second, publicKey: upper, proof: schnorrProofHex(device.privateKey, buildEnrollMessage(second, upper)) })
+      .expect(409);
+
+    const rows = await prisma.account.findMany({ where: { publicKey: { in: [devPk, upper] } } });
+    expect(rows).toHaveLength(1);
+  });
+
   it('rejects a nikCommitment that is a raw NIK instead of a SHA-384 digest', async () => {
     const opToken = await login(operator, opId);
     await request(app.getHttpServer())
