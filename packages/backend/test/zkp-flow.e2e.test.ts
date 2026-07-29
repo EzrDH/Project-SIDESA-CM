@@ -74,7 +74,7 @@ describe('ZKP eligibility flow (e2e, needs Postgres)', () => {
       .set('Authorization', `Bearer ${waToken}`).expect(200);
 
     const context = 'permohonan:SKTM:seq=1';
-    const ownership = hex(signMessage(warga.privateKey, enc.encode(context)));
+    const ownership = schnorrProofHex(warga.privateKey, enc.encode(context));
     const proof = {
       publicKey: waPk,
       attributes: p.body.attributes,

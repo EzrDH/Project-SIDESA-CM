@@ -110,16 +110,18 @@ class Session {
   /// Submit a letter request, gated by an eligibility proof.
   ///
   /// Flow: fetch a single-use nonce, fetch this account's Merkle membership
-  /// proof, then sign the (account, type, nonce) context to prove control of
-  /// the registered pseudonymous key. The raw NIK is never sent; the server
-  /// verifies membership + ownership and burns the nonce. Ownership is an ECDSA
-  /// signature (not Schnorr) so a hardware-backed key can produce it too.
+  /// proof, then prove knowledge of the secret behind the (account, type,
+  /// nonce) context to prove control of the registered pseudonymous key. The
+  /// raw NIK is never sent; the server verifies membership + ownership and
+  /// burns the nonce. Ownership is a Schnorr zero-knowledge proof of
+  /// knowledge, bound to this single-use context so a captured proof cannot
+  /// be replayed.
   Future<String> ajukanSurat(String type, Map<String, String> formData) async {
     final nonce = (await api.postJson('/letters/eligibility-challenge', const {}))['nonce'] as String;
     final rp = (await api.getJson('/registry/proof')) as Map<String, dynamic>;
     final pub = await keyStore.publicKey();
     final context = utf8.encode('SIDESA-letter-eligibility-v1|$accountId|$type|$nonce');
-    final ownership = await keyStore.sign(Uint8List.fromList(context));
+    final ownership = await keyStore.prove(Uint8List.fromList(context));
     final eligibility = {
       'proof': {
         'publicKey': bytesToHex(pub),

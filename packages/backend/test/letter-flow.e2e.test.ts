@@ -38,7 +38,7 @@ describe('Letter flow (e2e, needs Postgres)', () => {
     const ch = await request(app.getHttpServer()).post('/letters/eligibility-challenge').set('Authorization', `Bearer ${waToken}`).expect(201);
     const p = await request(app.getHttpServer()).get('/registry/proof').set('Authorization', `Bearer ${waToken}`).expect(200);
     const context = buildEligibilityContext(waId, type, ch.body.nonce);
-    const ownership = hex(signMessage(warga.privateKey, enc.encode(context)));
+    const ownership = schnorrProofHex(warga.privateKey, enc.encode(context));
     const proof = {
       publicKey: waPk,
       attributes: p.body.attributes,
@@ -142,7 +142,7 @@ describe('Letter flow (e2e, needs Postgres)', () => {
     const ch = await request(app.getHttpServer()).post('/letters/eligibility-challenge').set('Authorization', `Bearer ${waToken}`).expect(201);
     const p = await request(app.getHttpServer()).get('/registry/proof').set('Authorization', `Bearer ${waToken}`).expect(200);
     const context = buildEligibilityContext(waId, 'DOMISILI', ch.body.nonce);
-    const ownership = hex(signMessage(warga.privateKey, enc.encode(context)));
+    const ownership = schnorrProofHex(warga.privateKey, enc.encode(context));
     const proof = { publicKey: waPk, attributes: p.body.attributes, merkleProof: p.body.merkleProof, ownership };
     const body = { type: 'DOMISILI', formData: { nama: 'Budi' }, eligibility: { proof, nonce: ch.body.nonce } };
 
