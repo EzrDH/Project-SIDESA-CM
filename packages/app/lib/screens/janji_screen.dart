@@ -127,6 +127,14 @@ class _BuatJanjiSheetState extends State<_BuatJanjiSheet> {
       }
       widget.messenger.showSnackBar(const SnackBar(content: Text('Janji temu diajukan. Menunggu konfirmasi.')));
       if (mounted) Navigator.pop(context, true);
+    } on UnsupportedError {
+      // Booking now needs an eligibility proof, which needs the private scalar
+      // — and a hardware-backed key never releases it. Retrying cannot succeed,
+      // so don't invite it.
+      widget.messenger.showSnackBar(const SnackBar(
+        content: Text('Perangkat ini belum didukung untuk membuat janji. Sampaikan ke petugas desa.'),
+      ));
+      if (mounted) setState(() => _sending = false);
     } catch (_) {
       widget.messenger.showSnackBar(const SnackBar(content: Text('Gagal mengajukan janji. Coba lagi.')));
       if (mounted) setState(() => _sending = false);

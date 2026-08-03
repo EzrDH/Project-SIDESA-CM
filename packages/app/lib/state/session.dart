@@ -148,9 +148,33 @@ class Session {
   /// Absolute URL a QR should encode so a scanner reaches the public verifier.
   String verifyUrl(String qrToken) => '${api.baseUrl}/verify/$qrToken';
 
-  /// Book an appointment; returns the booking id.
+  /// Book an appointment, gated by an eligibility proof.
+  ///
+  /// Flow: fetch a single-use nonce, fetch this account's Merkle membership
+  /// proof, then prove knowledge of the secret behind the (account, nonce)
+  /// context to show control of the registered pseudonymous key. The raw NIK is
+  /// never sent; the server verifies membership + ownership and burns the
+  /// nonce. The proof is zero-knowledge and bound to this single-use context,
+  /// so a captured proof cannot be replayed. Returns the booking id.
   Future<String> buatJanji(String purpose, String requestedSlotIso) async {
-    final res = await api.postJson('/bookings', {'purpose': purpose, 'requestedSlot': requestedSlotIso});
+    final nonce = (await api.postJson('/bookings/eligibility-challenge', const {}))['nonce'] as String;
+    final rp = (await api.getJson('/registry/proof')) as Map<String, dynamic>;
+    final pub = await keyStore.publicKey();
+    final context = utf8.encode('SIDESA-booking-eligibility-v1|$accountId|$nonce');
+    final ownership = await keyStore.prove(Uint8List.fromList(context));
+    final res = await api.postJson('/bookings', {
+      'purpose': purpose,
+      'requestedSlot': requestedSlotIso,
+      'eligibility': {
+        'proof': {
+          'publicKey': bytesToHex(pub),
+          'attributes': rp['attributes'],
+          'merkleProof': rp['merkleProof'],
+          'ownership': bytesToHex(ownership),
+        },
+        'nonce': nonce,
+      },
+    });
     return res['id'] as String;
   }
 
