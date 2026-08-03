@@ -3,7 +3,6 @@ import { verifyEligibility } from '@sidesa/crypto';
 import { hexToBytes } from './registry.builder';
 import { RegistryService } from './registry.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { buildEligibilityContext } from './eligibility.context';
 import { EligibilityProofDto } from './eligibility.dto';
 
 export type { EligibilityProofDto };
@@ -56,14 +55,19 @@ export class EligibilityService {
     return { nonce };
   }
 
-  /// Verify a proof against a single-use nonce for one letter request, then burn
-  /// the nonce. The proof must (a) come from an unused, unexpired nonce owned by
+  /// Verify a proof against a single-use nonce for one request, then burn the
+  /// nonce. The proof must (a) come from an unused, unexpired nonce owned by
   /// this account, (b) reveal the account's own pseudonymous key, and (c) prove
-  /// membership + key ownership bound to (account, type, nonce). Returns false on
-  /// any failure — never throws — so the caller decides the HTTP response.
+  /// membership + key ownership bound to [context]. Returns false on any
+  /// failure — never throws — so the caller decides the HTTP response.
+  ///
+  /// [context] is built by the caller from the domain helpers in
+  /// `eligibility.context.ts`, which is what keeps the booking and letter flows
+  /// from accepting each other's proofs. The account and key bindings below are
+  /// checked here regardless of what the caller passed.
   async consumeAndVerify(
     accountId: string,
-    type: string,
+    context: string,
     proof: EligibilityProofDto,
     nonce: string,
   ): Promise<boolean> {
@@ -77,7 +81,6 @@ export class EligibilityService {
     // Bind the revealed pseudonymous key to this authenticated account.
     if (proof.publicKey.toLowerCase() !== acc.publicKey.toLowerCase()) return false;
 
-    const context = buildEligibilityContext(accountId, type, nonce);
     const { valid } = await this.verify(proof, context);
     if (!valid) return false;
 

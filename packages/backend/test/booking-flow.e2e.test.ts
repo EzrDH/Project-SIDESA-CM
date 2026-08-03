@@ -3,10 +3,12 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
-  generateKeyPair, derivePublic, secretFromBytes, proveKnowledge, encodeProof,
+  generateKeyPair, derivePublic, secretFromBytes, proveKnowledge, encodeProof, signMessage,
 } from '@sidesa/crypto';
 import { AppModule } from '../src/app.module';
 import { buildAuthMessage } from '../src/auth/auth.message';
+import { buildBookingEligibilityContext } from '../src/registry/eligibility.context';
+import { hexToBytes } from '../src/registry/registry.builder';
 import { PrismaService } from '../src/prisma/prisma.service';
 
 const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
@@ -43,7 +45,9 @@ describe('Booking flow (e2e, needs Postgres)', () => {
   });
   afterAll(async () => {
     await prisma.booking.deleteMany({ where: { wargaAccountId: waId } });
+    await prisma.eligibilityChallenge.deleteMany({ where: { accountId: waId } });
     await prisma.authChallenge.deleteMany({ where: { account: { publicKey: { in: [opPk, kaPk, waPk] } } } });
+    await prisma.registryVersion.deleteMany({ where: { signedBy: kaPk } });
     await prisma.account.deleteMany({ where: { publicKey: { in: [opPk, kaPk, waPk] } } });
     await app.close();
   });
@@ -51,11 +55,40 @@ describe('Booking flow (e2e, needs Postgres)', () => {
   it('warga books -> KaDes confirms -> operator checks in; warga cannot confirm', async () => {
     const opToken = await login(app, operator, opId);
     const kaToken = await login(app, kades, kaId);
+
+    // Booking is gated by an eligibility proof, so the warga has to be an
+    // approved member of a published registry before they can book at all.
+    await request(app.getHttpServer()).post('/registry/approve')
+      .set('Authorization', `Bearer ${opToken}`)
+      .send({ wargaAccountId: waId, attributes: 'rt=001;domisili=CibeteungMuara' }).expect(201);
+    const snap = await request(app.getHttpServer()).post('/registry/snapshot')
+      .set('Authorization', `Bearer ${opToken}`).expect(201);
+    await request(app.getHttpServer()).post('/registry/publish')
+      .set('Authorization', `Bearer ${kaToken}`)
+      .send({ version: snap.body.version, signature: hex(signMessage(kades.privateKey, hexToBytes(snap.body.root))) })
+      .expect(201);
+
     const waToken = await login(app, warga, waId);
+    const mp = await request(app.getHttpServer()).get('/registry/proof')
+      .set('Authorization', `Bearer ${waToken}`).expect(200);
+    const nonce = (await request(app.getHttpServer()).post('/bookings/eligibility-challenge')
+      .set('Authorization', `Bearer ${waToken}`).expect(201)).body.nonce as string;
+    const eligibility = {
+      proof: {
+        publicKey: waPk,
+        attributes: mp.body.attributes,
+        merkleProof: mp.body.merkleProof,
+        ownership: schnorrProofHex(
+          warga.privateKey,
+          new TextEncoder().encode(buildBookingEligibilityContext(waId, nonce)),
+        ),
+      },
+      nonce,
+    };
 
     const created = await request(app.getHttpServer()).post('/bookings')
       .set('Authorization', `Bearer ${waToken}`)
-      .send({ purpose: 'Konsultasi bantuan sosial', requestedSlot: slot }).expect(201);
+      .send({ purpose: 'Konsultasi bantuan sosial', requestedSlot: slot, eligibility }).expect(201);
     const { id, checkinToken } = created.body;
 
     await request(app.getHttpServer()).post(`/bookings/${id}/confirm`).set('Authorization', `Bearer ${waToken}`).send({}).expect(403);

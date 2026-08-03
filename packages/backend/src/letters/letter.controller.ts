@@ -6,6 +6,7 @@ import { LetterService } from './letter.service';
 import { EligibilityService } from '../registry/eligibility.service';
 import { AuditService } from '../audit/audit.service';
 import { RequestLetterDto, SignLetterDto } from './letter.dto';
+import { buildLetterEligibilityContext } from '../registry/eligibility.context';
 
 @Controller('letters')
 export class LetterController {
@@ -27,7 +28,8 @@ export class LetterController {
   @Roles('WARGA')
   async request(@Req() req: any, @Body() body: RequestLetterDto) {
     const el = body.eligibility as { proof: any; nonce: string };
-    const ok = el && (await this.eligibility.consumeAndVerify(req.user.accountId, body.type, el.proof, el.nonce));
+    const context = buildLetterEligibilityContext(req.user.accountId, body.type, el?.nonce);
+    const ok = el && (await this.eligibility.consumeAndVerify(req.user.accountId, context, el.proof, el.nonce));
     if (!ok) throw new ForbiddenException('Bukti kelayakan (ZKP) tidak valid atau kedaluwarsa.');
     return this.letters.createRequest(req.user.accountId, body.type, body.formData);
   }

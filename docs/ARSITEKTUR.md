@@ -7,8 +7,8 @@ Kecamatan Ciseeng, Kabupaten Bogor · Program ABDIMAS Politeknik Siber dan Sandi
 |---|---|
 | **Versi dokumen** | 1.0 |
 | **Tanggal** | 29 Juli 2026 |
-| **Keadaan kode yang dirujuk** | commit `a616fef` pada cabang `main` |
-| **Status** | Tahap 1 (penyatuan gerbang identitas) selesai dan tergabung |
+| **Keadaan kode yang dirujuk** | commit `9974e01` pada cabang `feat/booking-eligibility-gate` |
+| **Status** | Tahap 1 selesai dan tergabung; Tahap 2a (gerbang kelayakan pindah ke janji temu) selesai |
 
 ---
 
@@ -114,10 +114,10 @@ graph TB
 | Paket | Isi | Uji |
 |---|---|---|
 | `packages/crypto` | `@sidesa/crypto` — Schnorr, Merkle, hash berdomain, bukti kelayakan | 34 |
-| `packages/backend` | NestJS + Prisma + PostgreSQL — gerbang identitas, registri, janji temu, audit, notifikasi | 100 |
-| `packages/app` | Flutter (Material 3) — UI seluruh peran, kripto Dart (`pointycastle`), klien API | 34 |
+| `packages/backend` | NestJS + Prisma + PostgreSQL — gerbang identitas, registri, janji temu, audit, notifikasi | 112 |
+| `packages/app` | Flutter (Material 3) — UI seluruh peran, kripto Dart (`pointycastle`), klien API | 36 |
 
-**Total 168 pengujian otomatis.** Pengujian ditulis lebih dahulu (TDD) dan tidak pernah dilemahkan untuk membuat rangkaian menjadi hijau.
+**Total 182 pengujian otomatis.** Pengujian ditulis lebih dahulu (TDD) dan tidak pernah dilemahkan untuk membuat rangkaian menjadi hijau.
 
 ---
 
@@ -129,7 +129,8 @@ Ketiganya menjalankan protokol yang identik. Yang membedakan **hanya konteks** y
 |---|---|---|
 | **1. Autentikasi** | `SIDESA-auth-v1 \| akun \| nonce` | Perangkat menguasai skalar di balik kunci publik terdaftar, terikat pada nonce sekali pakai dari peladen |
 | **2. Pendaftaran perangkat** | `SIDESA-enroll-v1 \| kode \| kunciPublik` | Pengklaim benar-benar menguasai kunci yang sedang didaftarkan |
-| **3. Kelayakan** | `SIDESA-letter-eligibility-v1 \| akun \| jenis \| nonce` | Pemohon adalah anggota registri **dan** menguasai kunci yang dikomitmenkan daun Merkle-nya |
+| **3. Kelayakan (janji temu)** | `SIDESA-booking-eligibility-v1 \| akun \| nonce` | Pemohon adalah anggota registri **dan** menguasai kunci yang dikomitmenkan daun Merkle-nya |
+| *3b. Kelayakan (surat)* | `SIDESA-letter-eligibility-v1 \| akun \| jenis \| nonce` | Sama, untuk subsistem surat yang dihapus pada Tahap 2b |
 
 > **Mengapa Gerbang 2 penting.** Kunci publik bersifat unik di basis data. Tanpa bukti penguasaan, seseorang yang mencuri kode pendaftaran dapat mendaftarkan kunci **milik orang lain**, sehingga pemilik sah kunci itu **terkunci permanen** dari sistem. Bukti penguasaan menutup jalur tersebut.
 
@@ -281,7 +282,8 @@ Seluruh endpoint melewati validasi DTO dan pembatasan laju. Kolom **Peran** menu
 
 | Metode | Lintasan | Peran |
 |---|---|---|
-| `POST` | `/bookings` | WARGA |
+| `POST` | `/bookings/eligibility-challenge` | WARGA |
+| `POST` | `/bookings` | WARGA — **wajib bukti kelayakan** |
 | `GET` | `/bookings/mine` | WARGA |
 | `GET` | `/bookings/queue` | OPERATOR, KADES |
 | `POST` | `/bookings/:id/confirm` | KADES |
@@ -455,7 +457,11 @@ Subsistem berikut **masih berfungsi di dalam kode** meskipun sudah keluar dari l
 - `packages/app/lib/crypto/android_keystore.dart`
 - Pembuatan PDF dan QR
 
-Gerbang kelayakan masih memakai domain konteks `SIDESA-letter-eligibility-v1` — nama peninggalan yang akan disesuaikan saat subsistem antrean dikerjakan.
+Gerbang kelayakan kini menjaga **pemesanan janji temu**, bukan lagi hanya permohonan surat. Ini
+dikerjakan lebih dulu dengan sengaja: sebelumnya gerbang hanya terpasang pada `/letters/*`, sehingga
+menghapus subsistem surat akan ikut menghapus fitur bukti kelayakan — satu-satunya alasan produk ini
+ada. Kedua alur memakai domain konteks yang berbeda, dan sebuah pengujian mengirimkan bukti
+berkonteks surat ke `/bookings` untuk memastikan ditolak.
 
 ### Belum dikerjakan (Tahap 3)
 
@@ -482,7 +488,8 @@ Subsistem antrean *real-time* di kantor desa. **Terkunci menunggu wawancara pera
 | Tahap | Isi | Status |
 |---|---|---|
 | **Tahap 1** | Penyatuan ketiga gerbang identitas pada Schnorr | ✅ Selesai (`a616fef`) |
-| **Tahap 2** | Penghapusan subsistem surat, ECDSA, PDF/QR, keystore hardware | Siap dikerjakan |
+| **Tahap 2a** | Pemindahan gerbang kelayakan ke pemesanan janji temu | ✅ Selesai (`9974e01`) |
+| **Tahap 2b** | Penghapusan subsistem surat, ECDSA, PDF/QR, keystore hardware | Siap dikerjakan |
 | **Tahap 3** | Subsistem antrean *real-time* | ⏸ Menunggu wawancara desa |
 | **Tahap 4** | Pengerasan: *pepper* untuk komitmen NIK, rotasi kunci, TLS, atestasi | Terencana |
 | **Tahap 5** | Uji lapangan, SOP, pelatihan, serah terima | Terencana |
@@ -502,4 +509,4 @@ Subsistem antrean *real-time* di kantor desa. **Terkunci menunggu wawancara pera
 
 ---
 
-*Dokumen ini merujuk keadaan repositori pada commit `a616fef`. Setiap klaim mengenai kendali keamanan dapat ditelusuri sampai ke berkas pengujian yang menegakkannya.*
+*Dokumen ini merujuk keadaan repositori pada commit `9974e01`. Setiap klaim mengenai kendali keamanan dapat ditelusuri sampai ke berkas pengujian yang menegakkannya.*
